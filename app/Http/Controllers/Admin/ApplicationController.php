@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ReviewApplicationRequest;
 use App\Models\Application;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class ApplicationController extends Controller
@@ -43,7 +44,7 @@ class ApplicationController extends Controller
     public function review(ReviewApplicationRequest $request, $id)
     {
         $admin = auth('admin')->user();
-        $application = Application::where('application_id', $id)->where('application_status', 'pending')->firstOrFail();
+        $application = Application::with('premises')->where('application_id', $id)->where('application_status', 'pending')->firstOrFail();
 
         $application->update([
             'application_status' => $request->decision,
@@ -53,7 +54,14 @@ class ApplicationController extends Controller
             'updated_at' => now(),
         ]);
 
-        $msg = $request->decision === 'approved' ? 'Application approved. Resident may now proceed to payment.' : 'Application rejected.';
+        // Fire personal notification to the resident
+        if ($request->decision === 'approved') {
+            NotificationService::applicationApproved($application);
+            $msg = 'Application approved. Resident has been notified and may now proceed to payment.';
+        } else {
+            NotificationService::applicationRejected($application, $request->remarks);
+            $msg = 'Application rejected. Resident has been notified.';
+        }
 
         return back()->with('success', $msg);
     }

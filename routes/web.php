@@ -6,6 +6,7 @@ use App\Http\Controllers\Resident\DashboardController as ResidentDashboard;
 use App\Http\Controllers\Resident\PremisesController as ResidentPremisesController;
 use App\Http\Controllers\Resident\ApplicationController as ResidentApplicationController;
 use App\Http\Controllers\Resident\PaymentController;
+use App\Http\Controllers\Resident\NotificationController as ResidentNotificationController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\PremisesController as AdminPremisesController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Admin\ApplicationController as AdminApplicationControll
 use App\Http\Controllers\Admin\AgreementController;
 use App\Http\Controllers\Admin\ResidentController as AdminResidentController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 
 // Redirect root to login
 Route::get('/', fn() => redirect()->route('login'));
@@ -65,6 +67,15 @@ Route::middleware('resident')
                 Route::get('/{applicationId}', [PaymentController::class, 'showPayment'])->name('form');
                 Route::post('/process', [PaymentController::class, 'processPayment'])->name('process');
                 Route::get('/confirm/{paymentId}', [PaymentController::class, 'confirm'])->name('confirm');
+            });
+
+        // Notifications
+        Route::prefix('notifications')
+            ->name('notifications.')
+            ->group(function () {
+                Route::get('/', [ResidentNotificationController::class, 'index'])->name('index');
+                Route::post('/{id}/mark-read', [ResidentNotificationController::class, 'markRead'])->name('markRead');
+                Route::post('/mark-all-read', [ResidentNotificationController::class, 'markAllRead'])->name('markAllRead');
             });
     });
 
@@ -131,5 +142,14 @@ Route::middleware(['admin'])
                 Route::get('/revenue', [ReportController::class, 'revenueSummary'])->name('revenue');
                 Route::get('/applications', [ReportController::class, 'applicationStats'])->name('applications');
                 Route::get('/occupancy', [ReportController::class, 'occupancy'])->name('occupancy');
+            });
+
+        // Announcements (Admin Notifications)
+        Route::prefix('notifications')
+            ->name('notifications.')
+            ->group(function () {
+                Route::get('/', [AdminNotificationController::class, 'index'])->name('index');
+                Route::post('/', [AdminNotificationController::class, 'store'])->name('store');
+                Route::delete('/{id}', [AdminNotificationController::class, 'destroy'])->name('destroy');
             });
     });

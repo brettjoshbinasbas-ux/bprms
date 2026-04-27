@@ -88,10 +88,36 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
+        /* Notification bell icon with badge */
+        .notification-bell {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -8px;
+            background: #dc3545;
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 20px;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
         .user-nav .nav-right {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 20px;
             margin-left: auto;
         }
 
@@ -184,7 +210,8 @@
         </a>
 
         <div class="nav-links">
-            <a href="{{ route('resident.dashboard') }}" class="{{ request()->routeIs('resident.dashboard') ? 'active' : '' }}">
+            <a href="{{ route('resident.dashboard') }}"
+                class="{{ request()->routeIs('resident.dashboard') ? 'active' : '' }}">
                 <i class="bi bi-speedometer2"></i> Dashboard
             </a>
             <a href="{{ route('resident.premises.index') }}"
@@ -198,6 +225,17 @@
         </div>
 
         <div class="nav-right">
+            {{-- Notification Bell --}}
+            <a href="{{ route('resident.notifications.index') }}"
+                class="notification-bell text-white text-decoration-none">
+                <i class="bi bi-bell" style="font-size: 18px;"></i>
+                @if (isset($unreadCount) && $unreadCount > 0)
+                    <span class="notification-badge">
+                        {{ $unreadCount > 99 ? '99+' : $unreadCount }}
+                    </span>
+                @endif
+            </a>
+
             <div class="nav-user">
                 <i class="bi bi-person-circle"></i>
                 <span>{{ auth('resident')->user()->full_name }}</span>

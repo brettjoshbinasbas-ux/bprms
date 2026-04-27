@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
 use App\Models\Application;
+use App\Models\Notification;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +22,17 @@ class AppServiceProvider extends ServiceProvider
             if (auth('admin')->check()) {
                 $pendingCount = Application::where('application_status', 'pending')->count();
                 $view->with('pendingCount', $pendingCount);
+            }
+        });
+
+        // Share unread notification count to all resident views (for navbar badge)
+        View::composer('layouts.resident', function ($view) {
+            if (auth('resident')->check()) {
+                $resident = auth('resident')->user();
+                $unreadCount = Notification::forResident($resident->resident_id)
+                    ->unread()
+                    ->count();
+                $view->with('unreadCount', $unreadCount);
             }
         });
 

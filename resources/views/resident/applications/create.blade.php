@@ -391,7 +391,6 @@
             <div class="page-sub">Complete the form below to apply for this premises</div>
         </div>
 
-        @include('partials.flash')
 
         <div class="two-column-grid">
             {{-- LEFT: Application Form --}}

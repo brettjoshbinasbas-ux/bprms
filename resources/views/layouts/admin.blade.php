@@ -346,6 +346,12 @@
                 class="sidebar-link {{ request()->routeIs('admin.residents.*') ? 'active' : '' }}">
                 <i class="bi bi-people"></i> <span>Residents</span>
             </a>
+
+            <div class="nav-section">Announcements</div>
+            <a href="{{ route('admin.notifications.index') }}"
+                class="sidebar-link {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}">
+                <i class="bi bi-megaphone"></i> <span>Announcements</span>
+            </a>
         </nav>
 
         <div class="sidebar-footer">

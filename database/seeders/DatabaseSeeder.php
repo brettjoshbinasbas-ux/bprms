@@ -250,7 +250,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Application 4: Rejected
-        Application::create([
+        $app4 = Application::create([
             'resident_id' => $resident1->resident_id,
             'premises_id' => $p2->premises_id,
             'intended_business_type' => 'Tourism Souvenirs',
@@ -264,7 +264,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Application 5: Cancelled
-        Application::create([
+        $app5 = Application::create([
             'resident_id' => $resident2->resident_id,
             'premises_id' => $p6->premises_id,
             'intended_business_type' => 'Auto Accessories',
@@ -273,6 +273,24 @@ class DatabaseSeeder extends Seeder
             'application_date' => now()->subDays(20),
             'created_at' => now()->subDays(20),
         ]);
+
+        // ============================================================
+        // NOTIFICATIONS (demo data)
+        // ============================================================
+
+        // Broadcast: vacancy announcement
+        \App\Services\NotificationService::vacancyAnnouncement($p1->fresh(['location']), 'Stall Now Available — Lot 12 Tanah Rata Market', 'Lot 12 Tanah Rata Market (Market Stall) is now open for rental applications. ' . 'Monthly fee: RM 250.00. Log in to apply before the deadline.');
+
+        // Broadcast: custom announcement
+        \App\Services\NotificationService::customAnnouncement('Application Period Open — May 2024', 'MDCH is now accepting rental applications for available stalls and premises across ' . 'Tanah Rata, Brinchang, and Ringlet. Application forms must be submitted before 22 May 2024 at 4:30 PM. ' . 'Late or incomplete applications will not be processed.');
+
+        // Personal: approved (for resident3 whose app was approved)
+        \App\Services\NotificationService::applicationApproved($app1->fresh(['premises']));
+
+        // Personal: rejected (for resident1's rejected application)
+        if ($app4) {
+            \App\Services\NotificationService::applicationRejected($app4->load('premises'), 'Insufficient financial position for business premises.');
+        }
 
         // ============================================================
         // SUMMARY OUTPUT
@@ -287,5 +305,6 @@ class DatabaseSeeder extends Seeder
         $this->command->info('  Residents: 8');
         $this->command->info('  Applications: 5 (1 approved+paid, 1 pending, 1 approved, 1 rejected, 1 cancelled)');
         $this->command->info('  Rental Agreements: ' . RentalAgreement::count() . ' (auto-created by trigger)');
+        $this->command->info('  Notifications: ' . \App\Models\Notification::count() . ' (broadcast + personal)');
     }
 }
