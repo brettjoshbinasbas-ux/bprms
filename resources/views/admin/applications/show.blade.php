@@ -46,7 +46,7 @@
             color: #888;
         }
 
-        /* Status Badge */
+        /* Status Badges */
         .badge-pill {
             display: inline-block;
             padding: 6px 18px;
@@ -74,6 +74,24 @@
         }
 
         .badge-pill.cancelled {
+            background: #F5F5F5;
+            color: #757575;
+            border: 1px solid #BDBDBD;
+        }
+
+        .badge-pill.active {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #4CAF50;
+        }
+
+        .badge-pill.terminated {
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #EF5350;
+        }
+
+        .badge-pill.expired {
             background: #F5F5F5;
             color: #757575;
             border: 1px solid #BDBDBD;
@@ -206,6 +224,14 @@
             display: inline-block;
         }
 
+        /* Status row for header */
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         @media (max-width: 768px) {
             .show-page {
                 padding: 20px;
@@ -228,16 +254,25 @@
                     Submitted on {{ $application->application_date->format('F j, Y \a\t g:i A') }}
                 </div>
             </div>
-            @php
-                $statusClass = match ($application->application_status) {
-                    'pending' => 'pending',
-                    'approved' => 'approved',
-                    'rejected' => 'rejected',
-                    'cancelled' => 'cancelled',
-                    default => 'pending',
-                };
-            @endphp
-            <span class="badge-pill {{ $statusClass }}">{{ ucfirst($application->application_status) }}</span>
+            <div class="status-row">
+                @php
+                    $statusClass = match ($application->application_status) {
+                        'pending' => 'pending',
+                        'approved' => 'approved',
+                        'rejected' => 'rejected',
+                        'cancelled' => 'cancelled',
+                        default => 'pending',
+                    };
+                @endphp
+                <span class="badge-pill {{ $statusClass }}">
+                    {{ ucfirst($application->application_status) }}
+                </span>
+                @if ($application->application_status === 'approved' && $application->rentalAgreement)
+                    <span class="badge-pill {{ $application->display_status_badge_class }}" style="font-size: 11px;">
+                        <i class="bi bi-arrow-right-short"></i> {{ ucfirst($application->display_status) }}
+                    </span>
+                @endif
+            </div>
         </div>
 
         @include('partials.flash')
@@ -280,12 +315,14 @@
                             <div class="col-sm-4">
                                 <div class="text-muted" style="font-size:12px;">MDCH License Holder</div>
                                 <div style="font-size:14px;">
-                                    {{ $application->resident?->mdch_license_holder ? 'Yes' : 'No' }}</div>
+                                    {{ $application->resident?->mdch_license_holder ? 'Yes' : 'No' }}
+                                </div>
                             </div>
                             <div class="col-sm-6">
                                 <div class="text-muted" style="font-size:12px;">Business Experience</div>
                                 <div style="font-size:14px;">
-                                    {{ $application->resident?->business_experience ? 'Yes' : 'No' }}</div>
+                                    {{ $application->resident?->business_experience ? 'Yes' : 'No' }}
+                                </div>
                             </div>
                             @if ($application->resident?->business_type)
                                 <div class="col-sm-6">
@@ -315,7 +352,8 @@
                             <div class="col-sm-6">
                                 <div class="text-muted" style="font-size:12px;">Financial Position</div>
                                 <div style="font-size:14px;font-weight:600;">RM
-                                    {{ number_format($application->financial_position, 2) }}</div>
+                                    {{ number_format($application->financial_position, 2) }}
+                                </div>
                             </div>
                             @if ($application->reviewed_at)
                                 <div class="col-sm-6">
@@ -363,7 +401,8 @@
                                                     <div style="font-size:12px;font-weight:600;">{{ $doc->type_label }}
                                                     </div>
                                                     <div style="font-size:11px;" class="text-muted">
-                                                        {{ Str::limit($doc->document_filename, 25) }}</div>
+                                                        {{ Str::limit($doc->document_filename, 25) }}
+                                                    </div>
                                                 </div>
                                             </div>
                                             <a href="{{ Storage::url($doc->document_path) }}" target="_blank"
@@ -389,7 +428,8 @@
                                 <div class="col-sm-4">
                                     <div class="text-muted" style="font-size:12px;">Amount</div>
                                     <div class="fw-bold text-success" style="font-size:16px;">RM
-                                        {{ number_format($application->payment->amount, 2) }}</div>
+                                        {{ number_format($application->payment->amount, 2) }}
+                                    </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="text-muted" style="font-size:12px;">Card</div>
@@ -398,7 +438,8 @@
                                 <div class="col-sm-4">
                                     <div class="text-muted" style="font-size:12px;">Date</div>
                                     <div style="font-size:14px;">
-                                        {{ $application->payment->payment_date->format('d M Y') }}</div>
+                                        {{ $application->payment->payment_date->format('d M Y') }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -420,22 +461,36 @@
                                 <div class="col-sm-4">
                                     <div class="text-muted" style="font-size:12px;">Start Date</div>
                                     <div style="font-size:14px;">
-                                        {{ $application->rentalAgreement->agreement_start_date->format('d M Y') }}</div>
+                                        {{ $application->rentalAgreement->agreement_start_date->format('d M Y') }}
+                                    </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="text-muted" style="font-size:12px;">End Date</div>
                                     <div style="font-size:14px;">
-                                        {{ $application->rentalAgreement->agreement_end_date->format('d M Y') }}</div>
+                                        {{ $application->rentalAgreement->agreement_end_date->format('d M Y') }}
+                                    </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="text-muted" style="font-size:12px;">Status</div>
-                                    <span
-                                        class="premises-badge">{{ ucfirst($application->rentalAgreement->agreement_status) }}</span>
+                                    @php
+                                        $agreementStatusClass = match (
+                                            $application->rentalAgreement->agreement_status
+                                        ) {
+                                            'active' => 'active',
+                                            'terminated' => 'terminated',
+                                            'expired' => 'expired',
+                                            default => 'pending',
+                                        };
+                                    @endphp
+                                    <span class="badge-pill {{ $agreementStatusClass }}" style="font-size: 11px;">
+                                        {{ ucfirst($application->rentalAgreement->agreement_status) }}
+                                    </span>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="text-muted" style="font-size:12px;">Signed At</div>
                                     <div style="font-size:14px;">
-                                        {{ $application->rentalAgreement->signed_at->format('d M Y') }}</div>
+                                        {{ $application->rentalAgreement->signed_at->format('d M Y') }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -454,7 +509,8 @@
                     <div class="card-body-custom">
                         <div class="mb-3">
                             <div class="text-muted" style="font-size:12px;">Name</div>
-                            <div class="fw-semibold" style="font-size:14px;">{{ $application->premises?->premises_name }}
+                            <div class="fw-semibold" style="font-size:14px;">
+                                {{ $application->premises?->premises_name }}
                             </div>
                         </div>
                         <div class="mb-3">

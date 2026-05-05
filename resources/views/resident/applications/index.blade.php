@@ -364,11 +364,14 @@
         <form method="GET" action="{{ route('resident.applications.index') }}" class="filter-controls">
             <select name="status" class="filter-select">
                 <option value="">All Statuses</option>
-                @foreach (['pending', 'approved', 'rejected', 'cancelled'] as $s)
-                    <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
-                        {{ ucfirst($s) }}
-                    </option>
-                @endforeach
+                <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved (Awaiting
+                    Payment)</option>
+                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active (Rented)</option>
+                <option value="terminated" {{ request('status') === 'terminated' ? 'selected' : '' }}>Terminated</option>
+                <option value="expired" {{ request('status') === 'expired' ? 'selected' : '' }}>Expired</option>
+                <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
             </select>
             <button type="submit" class="btn-filter">
                 <i class="bi bi-funnel"></i> Filter
@@ -434,8 +437,8 @@
                                 {{ \Carbon\Carbon::parse($app->application_date)->format('d M Y') }}
                             </td>
                             <td class="td-status">
-                                <span class="badge-pill {{ $statusClass }}">
-                                    {{ ucfirst($app->application_status) }}
+                                <span class="badge-pill {{ $app->display_status_badge_class }}">
+                                    {{ ucfirst($app->display_status) }}
                                 </span>
                             </td>
                             <td class="td-rental">

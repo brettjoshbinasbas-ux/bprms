@@ -3,8 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         DB::unprepared("
@@ -21,6 +20,7 @@ return new class extends Migration
                 remarks                  VARCHAR(255)    DEFAULT NULL,
                 created_at               DATETIME        NOT NULL DEFAULT NOW(),
                 updated_at               DATETIME        DEFAULT NULL ON UPDATE NOW(),
+                deleted_at               DATETIME        DEFAULT NULL,
                 CONSTRAINT pk_applications             PRIMARY KEY (application_id),
                 CONSTRAINT fk_applications_resident    FOREIGN KEY (resident_id)
                     REFERENCES residents(resident_id)
@@ -37,8 +37,9 @@ return new class extends Migration
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ");
 
-        DB::unprepared("CREATE INDEX idx_applications_status   ON applications(application_status);");
-        DB::unprepared("CREATE INDEX idx_applications_resident ON applications(resident_id);");
+        DB::unprepared('CREATE INDEX idx_applications_status   ON applications(application_status);');
+        DB::unprepared('CREATE INDEX idx_applications_resident ON applications(resident_id);');
+        DB::unprepared('CREATE INDEX idx_applications_deleted  ON applications(deleted_at);');
     }
 
     public function down(): void

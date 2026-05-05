@@ -127,6 +127,17 @@
             display: inline-block;
         }
 
+        .badge-expired {
+            background: #F5F5F5;
+            color: #757575;
+            border: 1px solid #BDBDBD;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
         /* Applications Table */
         .applications-card {
             background: #fff;
@@ -209,6 +220,40 @@
             border: 1px solid #BDBDBD;
         }
 
+        /* Secondary badge for agreement status */
+        .badge-sm {
+            font-size: 10px;
+            padding: 3px 10px;
+            margin-left: 4px;
+            vertical-align: middle;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .badge-sm.active {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #4CAF50;
+        }
+
+        .badge-sm.terminated {
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #EF5350;
+        }
+
+        .badge-sm.expired {
+            background: #F5F5F5;
+            color: #757575;
+            border: 1px solid #BDBDBD;
+        }
+
+        .badge-sm.archived {
+            background: #F5F5F5;
+            color: #999;
+            border: 1px solid #ddd;
+        }
+
         .action-view {
             color: #1B5E20;
             font-weight: 600;
@@ -256,6 +301,11 @@
             <div class="page-title">
                 <i class="bi bi-person-circle" style="font-size: 32px; color: #1B5E20;"></i>
                 {{ $resident->full_name }}
+                @if ($resident->trashed())
+                    <span class="badge badge-expired" style="font-size: 12px; margin-left: 12px;">
+                        <i class="bi bi-person-x me-1"></i>Deactivated
+                    </span>
+                @endif
             </div>
         </div>
 
@@ -342,6 +392,19 @@
                                 {{ \Carbon\Carbon::parse($resident->created_at)->format('d M Y, g:i A') }}
                             </div>
                         </div>
+                        @if ($resident->trashed())
+                            <div class="profile-row">
+                                <div class="profile-label">Account Status</div>
+                                <div class="profile-value">
+                                    <span class="badge badge-expired" style="font-size: 12px;">
+                                        <i class="bi bi-person-x me-1"></i> Deactivated
+                                    </span>
+                                    <span class="text-muted" style="font-size: 12px; margin-left: 8px;">
+                                        (Deactivated on {{ $resident->deleted_at->format('d M Y, g:i A') }})
+                                    </span>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -351,6 +414,11 @@
                 <div class="applications-card">
                     <div class="card-header-custom">
                         <i class="bi bi-file-earmark-text"></i> Applications
+                        @if ($resident->trashed())
+                            <span class="badge badge-expired" style="font-size: 10px; margin-left: 8px;">
+                                Archived
+                            </span>
+                        @endif
                     </div>
                     <div class="card-body-custom p-0">
                         @if ($resident->applications->isEmpty())
@@ -372,32 +440,60 @@
                                 <tbody>
                                     @foreach ($resident->applications as $app)
                                         @php
-                                            $statusClass = match ($app->application_status) {
+                                            // Main application status
+                                            $appStatusClass = match ($app->application_status) {
                                                 'pending' => 'pending',
                                                 'approved' => 'approved',
                                                 'rejected' => 'rejected',
                                                 'cancelled' => 'cancelled',
                                                 default => 'pending',
                                             };
+
+                                            // Check if approved application has a rental agreement
+                                            $hasAgreement =
+                                                $app->application_status === 'approved' && $app->rentalAgreement;
+                                            $agreementStatus = $hasAgreement
+                                                ? $app->rentalAgreement->agreement_status
+                                                : null;
+                                            $agreementClass = match ($agreementStatus) {
+                                                'active' => 'active',
+                                                'terminated' => 'terminated',
+                                                'expired' => 'expired',
+                                                default => '',
+                                            };
                                         @endphp
                                         <tr>
-                                            <td class="text-muted">#{{ $app->application_id }}</td>
+                                            <td class="text-muted">#{{ $app->application_id }}
+                                                @if ($app->trashed())
+                                                    <span class="badge-sm archived ms-1">Archived</span>
+                                                @endif
+                                            </td>
                                             <td>
-                                                <div style="font-size: 13px;">{{ $app->premises?->premises_name ?? '—' }}
+                                                <div style="font-size: 13px; font-weight: 500;">
+                                                    {{ $app->premises?->premises_name ?? '—' }}
                                                 </div>
                                                 <div style="font-size: 11px;" class="text-muted">
                                                     <i class="bi bi-geo-alt"></i>
                                                     {{ $app->premises?->location?->location_name ?? '—' }}
                                                 </div>
                                             </td>
-                                            <td style="font-size: 12px;" class="text-muted">
-                                                {{ \Carbon\Carbon::parse($app->application_date)->format('d M Y') }}</td>
-                                            <td>
-                                                <span class="badge-pill {{ $statusClass }}">
-                                                    {{ ucfirst($app->application_status) }}
-                                                </span>
+                                            <td style="font-size: 12px;" class="text-muted" style="white-space: nowrap;">
+                                                {{ \Carbon\Carbon::parse($app->application_date)->format('d M Y') }}
                                             </td>
-                                            <td>
+                                            <td class="td-status">
+                                                <div class="d-flex flex-wrap align-items-center gap-1">
+                                                    <span class="badge-pill {{ $appStatusClass }}">
+                                                        {{ ucfirst($app->application_status) }}
+                                                    </span>
+                                                    @if ($hasAgreement)
+                                                        <span class="badge-sm {{ $agreementClass }}">
+                                                            <i class="bi bi-arrow-right-short"></i>
+                                                            {{ ucfirst($agreementStatus) }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="td-action">
                                                 <a href="{{ route('admin.applications.show', $app->application_id) }}"
                                                     class="action-view">
                                                     <i class="bi bi-eye"></i> View

@@ -220,7 +220,7 @@
             </div>
             <div>
                 <div class="stat-number">RM {{ number_format($avgRevenue, 2) }}</div>
-                <div class="stat-label">Average / Type</div>
+                <div class="stat-label">Average Revenue per Location/Type</div>
             </div>
         </div>
     </div>

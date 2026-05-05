@@ -19,9 +19,7 @@ use App\Http\Controllers\Admin\NotificationController as AdminNotificationContro
 // Redirect root to login
 Route::get('/', fn() => redirect()->route('login'));
 
-// ============================================================
-// GUEST ROUTES
-// ============================================================
+// GUEST ROUTES: Users that are not login
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -32,9 +30,7 @@ Route::middleware('guest')->group(function () {
 // Logout (handles both guards)
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// ============================================================
 // RESIDENT ROUTES
-// ============================================================
 Route::middleware('resident')
     ->prefix('resident')
     ->name('resident.')
@@ -79,9 +75,7 @@ Route::middleware('resident')
             });
     });
 
-// ============================================================
 // ADMIN ROUTES
-// ============================================================
 Route::middleware(['admin'])
     ->prefix('admin')
     ->name('admin.')
@@ -106,6 +100,8 @@ Route::middleware(['admin'])
                 Route::post('/', [AdminPremisesController::class, 'store'])->name('store');
                 Route::put('/{premises}', [AdminPremisesController::class, 'update'])->name('update');
                 Route::delete('/{premises}', [AdminPremisesController::class, 'destroy'])->name('destroy');
+                // CHANGE THIS LINE:
+                Route::post('/{premises}/publish-vacancy', [AdminPremisesController::class, 'publishVacancy'])->name('publishVacancy');
             });
 
         // Applications
@@ -151,5 +147,16 @@ Route::middleware(['admin'])
                 Route::get('/', [AdminNotificationController::class, 'index'])->name('index');
                 Route::post('/', [AdminNotificationController::class, 'store'])->name('store');
                 Route::delete('/{id}', [AdminNotificationController::class, 'destroy'])->name('destroy');
+            });
+
+        // Residents (view-only for admin)
+        Route::prefix('residents')
+            ->name('residents.')
+            ->group(function () {
+                Route::get('/', [AdminResidentController::class, 'index'])->name('index');
+                Route::get('/{resident}', [AdminResidentController::class, 'show'])->name('show');
+                // ADD THESE TWO LINES:
+                Route::post('/{id}/deactivate', [AdminResidentController::class, 'deactivate'])->name('deactivate');
+                Route::post('/{id}/restore', [AdminResidentController::class, 'restore'])->name('restore');
             });
     });

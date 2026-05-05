@@ -26,6 +26,7 @@ class Admin extends Authenticatable
         return trim("{$this->admin_first_name} " . ($this->admin_middle_name ? "{$this->admin_middle_name} " : '') . $this->admin_last_name);
     }
 
+    // Relationships
     public function applications()
     {
         return $this->hasMany(Application::class, 'reviewed_by', 'admin_id');

@@ -393,16 +393,9 @@
                     Submitted on {{ \Carbon\Carbon::parse($application->application_date)->format('d M Y, g:i A') }}
                 </div>
             </div>
-            @php
-                $statusClass = match ($application->application_status) {
-                    'pending' => 'pending',
-                    'approved' => 'approved',
-                    'rejected' => 'rejected',
-                    'cancelled' => 'cancelled',
-                    default => 'pending',
-                };
-            @endphp
-            <span class="badge-pill {{ $statusClass }}">{{ ucfirst($application->application_status) }}</span>
+            <span class="badge-pill {{ $application->display_status_badge_class }}">
+                {{ ucfirst($application->display_status) }}
+            </span>
         </div>
 
         {{-- Two-column grid layout --}}

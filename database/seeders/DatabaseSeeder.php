@@ -39,82 +39,165 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // ============================================================
-        // LOCATIONS (Cameron Highlands towns)
+        // LOCATIONS — real Cameron Highlands towns from MDCH portal
         // ============================================================
-        $tanah = Location::create(['location_name' => 'Tanah Rata', 'location_description' => 'Main town of Cameron Highlands', 'created_at' => now()]);
-        $brinchang = Location::create(['location_name' => 'Brinchang', 'location_description' => 'Northern highland town', 'created_at' => now()]);
-        $ringlet = Location::create(['location_name' => 'Ringlet', 'location_description' => 'Gateway to Cameron Highlands', 'created_at' => now()]);
+        $tanah = Location::create([
+            'location_name' => 'Tanah Rata',
+            'location_description' => 'Main administrative town of Cameron Highlands',
+            'created_at' => now(),
+        ]);
+
+        $brinchang = Location::create([
+            'location_name' => 'Brinchang',
+            'location_description' => 'Northern highland commercial centre',
+            'created_at' => now(),
+        ]);
+
+        $ringlet = Location::create([
+            'location_name' => 'Ringlet',
+            'location_description' => 'Gateway town to Cameron Highlands from Tapah',
+            'created_at' => now(),
+        ]);
+
+        $lembahBertam = Location::create([
+            'location_name' => 'Lembah Bertam',
+            'location_description' => 'Valley settlement in Cameron Highlands',
+            'created_at' => now(),
+        ]);
+
+        $keaFarm = Location::create([
+            'location_name' => 'Kea Farm',
+            'location_description' => 'Agricultural and produce market area',
+            'created_at' => now(),
+        ]);
+
+        $kampungRaja = Location::create([
+            'location_name' => 'Kampung Raja',
+            'location_description' => 'Northern settlement near Lojing highlands',
+            'created_at' => now(),
+        ]);
 
         // ============================================================
-        // PREMISES
+        // PREMISES — sourced from actual MDCH vacancy notice
         // ============================================================
+
+        // Lembah Bertam
         $p1 = Premises::create([
-            'location_id' => $tanah->location_id,
-            'premises_name' => 'Lot 12 Tanah Rata Market',
-            'premises_type' => 'market_stall',
-            'premises_description' => 'Ground floor market stall near bus terminal',
-            'rental_fee' => 250.0,
+            'location_id' => $lembahBertam->location_id,
+            'premises_name' => 'My Kiosk Lembah Bertam',
+            'premises_type' => 'various',
+            'premises_description' => 'Multi-purpose kiosk units in Lembah Bertam',
+            'applicant_quota' => 'open',
+            'rental_fee' => 150.0,
             'premises_status' => 'available',
             'created_at' => now(),
         ]);
 
+        // Ringlet
         $p2 = Premises::create([
+            'location_id' => $ringlet->location_id,
+            'premises_name' => 'No. 22 Ringlet Market',
+            'premises_type' => 'market_stall',
+            'premises_description' => 'Store/retail unit inside Ringlet market complex',
+            'applicant_quota' => 'open',
+            'rental_fee' => 200.0,
+            'premises_status' => 'available',
+            'created_at' => now(),
+        ]);
+
+        // Tanah Rata — Freesia Counter 2
+        $p3a = Premises::create([
             'location_id' => $tanah->location_id,
-            'premises_name' => 'Tanah Rata Business Unit B3',
+            'premises_name' => 'Freesia Counter 2',
             'premises_type' => 'business_premises',
-            'premises_description' => '2-storey shophouse in Tanah Rata commercial area',
-            'rental_fee' => 850.0,
+            'premises_description' => 'Counter unit 2 at Freesia commercial block, Tanah Rata',
+            'applicant_quota' => 'open',
+            'rental_fee' => 350.0,
             'premises_status' => 'available',
             'created_at' => now(),
         ]);
 
-        $p3 = Premises::create([
-            'location_id' => $brinchang->location_id,
-            'premises_name' => 'Brinchang Food Court Stall F4',
-            'premises_type' => 'food_stall',
-            'premises_description' => 'Corner stall in Brinchang night market food court',
-            'rental_fee' => 320.0,
+        // Tanah Rata — Freesia Counter 3
+        $p3b = Premises::create([
+            'location_id' => $tanah->location_id,
+            'premises_name' => 'Freesia Counter 3',
+            'premises_type' => 'business_premises',
+            'premises_description' => 'Counter unit 3 at Freesia commercial block, Tanah Rata',
+            'applicant_quota' => 'open',
+            'rental_fee' => 350.0,
             'premises_status' => 'available',
             'created_at' => now(),
         ]);
 
+        // Tanah Rata — Freesia Counter 6
+        $p3c = Premises::create([
+            'location_id' => $tanah->location_id,
+            'premises_name' => 'Freesia Counter 6',
+            'premises_type' => 'business_premises',
+            'premises_description' => 'Counter unit 6 at Freesia commercial block, Tanah Rata',
+            'applicant_quota' => 'open',
+            'rental_fee' => 350.0,
+            'premises_status' => 'available',
+            'created_at' => now(),
+        ]);
+
+        // Tanah Rata — Food Stall
         $p4 = Premises::create([
-            'location_id' => $brinchang->location_id,
-            'premises_name' => 'Brinchang Handicraft Corner H1',
-            'premises_type' => 'handicraft',
-            'premises_description' => 'Heritage handicraft display space',
-            'rental_fee' => 180.0,
+            'location_id' => $tanah->location_id,
+            'premises_name' => 'No. 6 Food Stall, Jalan Besar Tanah Rata',
+            'premises_type' => 'food_stall',
+            'premises_description' => 'Food and beverage stall along Jalan Besar, Tanah Rata',
+            'applicant_quota' => 'open',
+            'rental_fee' => 320.0,
             'premises_status' => 'occupied',
             'created_at' => now(),
         ]);
 
+        // Kea Farm - No. 3
         $p5 = Premises::create([
-            'location_id' => $ringlet->location_id,
-            'premises_name' => 'Ringlet Market Table MT-07',
-            'premises_type' => 'market_table',
-            'premises_description' => 'Market table in Ringlet weekly produce market',
-            'rental_fee' => 90.0,
+            'location_id' => $keaFarm->location_id,
+            'premises_name' => 'No. 3, Kea Farm Stall Complex',
+            'premises_type' => 'market_stall',
+            'premises_description' => 'Stall unit in Kea Farm complex, various use',
+            'applicant_quota' => 'open',
+            'rental_fee' => 180.0,
             'premises_status' => 'available',
             'created_at' => now(),
         ]);
 
+        // Kea Farm - No. 9
         $p6 = Premises::create([
-            'location_id' => $tanah->location_id,
-            'premises_name' => 'Tanah Rata Auto Workshop W2',
-            'premises_type' => 'workshop',
-            'premises_description' => 'Covered workshop bay with drainage',
-            'rental_fee' => 650.0,
+            'location_id' => $keaFarm->location_id,
+            'premises_name' => 'No. 9, Kea Farm Stall Complex',
+            'premises_type' => 'market_stall',
+            'premises_description' => 'Stall unit in Kea Farm complex, various use',
+            'applicant_quota' => 'open',
+            'rental_fee' => 180.0,
             'premises_status' => 'available',
             'created_at' => now(),
         ]);
 
+        // Kampung Raja
         $p7 = Premises::create([
-            'location_id' => $ringlet->location_id,
-            'premises_name' => 'Ringlet Multipurpose Lot V1',
+            'location_id' => $kampungRaja->location_id,
+            'premises_name' => 'Kampung Raja Bus Shelter / Hut',
             'premises_type' => 'various',
-            'premises_description' => 'General commercial lot, flexible use',
-            'rental_fee' => 400.0,
-            'premises_status' => 'unavailable',
+            'premises_description' => 'Commercial hut space at bus shelter, Kampung Raja',
+            'applicant_quota' => 'open',
+            'rental_fee' => 120.0,
+            'premises_status' => 'available',
+            'created_at' => now(),
+        ]);
+
+        // Brinchang Night Market Stall
+        $p8 = Premises::create([
+            'location_id' => $brinchang->location_id,
+            'premises_name' => 'Brinchang Night Market Stall B-12',
+            'premises_type' => 'market_stall',
+            'premises_description' => 'Night market trading stall in Brinchang town',
+            'applicant_quota' => 'open',
+            'rental_fee' => 220.0,
+            'premises_status' => 'available',
             'created_at' => now(),
         ]);
 
@@ -172,7 +255,6 @@ class DatabaseSeeder extends Seeder
         // Extra dummy residents
         $dummyResidents = [['Lim', 'Wei Kiat', '920305101234', '0111234567', 'married'], ['Norida', 'Zakaria', '940820045678', '0129876543', 'single'], ['Kumar', 'Selvam', '881215087654', '0167654321', 'widowed'], ['Fatimah', 'Ismail', '760901025432', '0133219876', 'divorced'], ['David', 'Tan', '990715141234', '0125432167', 'single']];
 
-        $icBase = 800000000000;
         foreach ($dummyResidents as $i => $d) {
             Resident::create([
                 'resident_first_name' => $d[0],
@@ -219,15 +301,16 @@ class DatabaseSeeder extends Seeder
             'payment_status' => 'pending',
             'created_at' => now()->subDays(24),
         ]);
+
         // Update to completed — fires trigger
         DB::table('payments')
             ->where('payment_id', $pay1->payment_id)
             ->update(['payment_status' => 'completed']);
 
-        // Application 2: Pending
+        // Application 2: Pending - using Freesia Counter 2
         $app2 = Application::create([
             'resident_id' => $resident1->resident_id,
-            'premises_id' => $p3->premises_id,
+            'premises_id' => $p3a->premises_id, // Freesia Counter 2
             'intended_business_type' => 'Nasi Lemak & Local Cuisine',
             'financial_position' => 8000.0,
             'application_status' => 'pending',
@@ -238,7 +321,7 @@ class DatabaseSeeder extends Seeder
         // Application 3: Approved, awaiting payment
         $app3 = Application::create([
             'resident_id' => $resident2->resident_id,
-            'premises_id' => $p1->premises_id,
+            'premises_id' => $p1->premises_id, // My Kiosk Lembah Bertam
             'intended_business_type' => 'Fresh Produce & Vegetables',
             'financial_position' => 3000.0,
             'application_status' => 'approved',
@@ -252,7 +335,7 @@ class DatabaseSeeder extends Seeder
         // Application 4: Rejected
         $app4 = Application::create([
             'resident_id' => $resident1->resident_id,
-            'premises_id' => $p2->premises_id,
+            'premises_id' => $p8->premises_id, // Brinchang Night Market Stall
             'intended_business_type' => 'Tourism Souvenirs',
             'financial_position' => 1500.0,
             'application_status' => 'rejected',
@@ -266,7 +349,7 @@ class DatabaseSeeder extends Seeder
         // Application 5: Cancelled
         $app5 = Application::create([
             'resident_id' => $resident2->resident_id,
-            'premises_id' => $p6->premises_id,
+            'premises_id' => $p2->premises_id, // No. 22 Ringlet Market
             'intended_business_type' => 'Auto Accessories',
             'financial_position' => 6000.0,
             'application_status' => 'cancelled',
@@ -279,10 +362,10 @@ class DatabaseSeeder extends Seeder
         // ============================================================
 
         // Broadcast: vacancy announcement
-        \App\Services\NotificationService::vacancyAnnouncement($p1->fresh(['location']), 'Stall Now Available — Lot 12 Tanah Rata Market', 'Lot 12 Tanah Rata Market (Market Stall) is now open for rental applications. ' . 'Monthly fee: RM 250.00. Log in to apply before the deadline.');
+        \App\Services\NotificationService::vacancyAnnouncement($p1->fresh(['location']), 'Stall Now Available — My Kiosk Lembah Bertam', 'My Kiosk Lembah Bertam (4 units available) is now open for rental applications. ' . 'Monthly fee: RM 150.00. Log in to apply before the deadline.');
 
         // Broadcast: custom announcement
-        \App\Services\NotificationService::customAnnouncement('Application Period Open — May 2024', 'MDCH is now accepting rental applications for available stalls and premises across ' . 'Tanah Rata, Brinchang, and Ringlet. Application forms must be submitted before 22 May 2024 at 4:30 PM. ' . 'Late or incomplete applications will not be processed.');
+        \App\Services\NotificationService::customAnnouncement('Application Period Open — May 2024', 'MDCH is now accepting rental applications for available stalls and premises across ' . 'Tanah Rata, Brinchang, Ringlet, Lembah Bertam, Kea Farm, and Kampung Raja. ' . 'Application forms must be submitted before 22 May 2024 at 4:30 PM. ' . 'Late or incomplete applications will not be processed.');
 
         // Personal: approved (for resident3 whose app was approved)
         \App\Services\NotificationService::applicationApproved($app1->fresh(['premises']));
@@ -300,8 +383,8 @@ class DatabaseSeeder extends Seeder
         $this->command->info('  Resident:  ahmad@example.com / password');
         $this->command->info('  Resident:  siti@example.com  / password');
         $this->command->info('  Resident:  rajan@example.com / password');
-        $this->command->info('  Locations: 3 (Tanah Rata, Brinchang, Ringlet)');
-        $this->command->info('  Premises:  7');
+        $this->command->info('  Locations: 6 (Tanah Rata, Brinchang, Ringlet, Lembah Bertam, Kea Farm, Kampung Raja)');
+        $this->command->info('  Premises:  8');
         $this->command->info('  Residents: 8');
         $this->command->info('  Applications: 5 (1 approved+paid, 1 pending, 1 approved, 1 rejected, 1 cancelled)');
         $this->command->info('  Rental Agreements: ' . RentalAgreement::count() . ' (auto-created by trigger)');

@@ -157,50 +157,6 @@
             text-align: center;
         }
 
-        /* Role selector styles */
-        .role-selector {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .role-option {
-            flex: 1;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.15s;
-            background: #fff;
-        }
-
-        .role-option.selected {
-            border-color: #1B5E20;
-            background: #E8F5E9;
-        }
-
-        .role-option i {
-            font-size: 24px;
-            display: block;
-            margin-bottom: 8px;
-            color: #666;
-        }
-
-        .role-option.selected i {
-            color: #1B5E20;
-        }
-
-        .role-option .role-label {
-            font-size: 13px;
-            font-weight: 600;
-            margin: 0;
-        }
-
-        .role-option.selected .role-label {
-            color: #1B5E20;
-        }
-
         .form-group {
             margin-bottom: 24px;
         }
@@ -224,26 +180,6 @@
 
         <form method="POST" action="{{ route('login.post') }}">
             @csrf
-
-            {{-- Role selector --}}
-            <div class="form-group">
-                <label class="form-label">Sign in as</label>
-                <div class="role-selector">
-                    <div class="role-option {{ old('role', 'resident') === 'resident' ? 'selected' : '' }}"
-                        data-role="resident">
-                        <i class="bi bi-person"></i>
-                        <p class="role-label">Resident</p>
-                    </div>
-                    <div class="role-option {{ old('role') === 'admin' ? 'selected' : '' }}" data-role="admin">
-                        <i class="bi bi-shield-lock"></i>
-                        <p class="role-label">Administrator</p>
-                    </div>
-                </div>
-                <input type="hidden" name="role" id="roleInput" value="{{ old('role', 'resident') }}">
-                @error('role')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
 
             {{-- Email field --}}
             <div class="form-group">
@@ -288,17 +224,6 @@
                 icon.classList.replace('bi-eye-slash', 'bi-eye');
             }
         }
-
-        // Role selector functionality
-        document.querySelectorAll('.role-option').forEach(option => {
-            option.addEventListener('click', function() {
-                document.querySelectorAll('.role-option').forEach(opt => {
-                    opt.classList.remove('selected');
-                });
-                this.classList.add('selected');
-                document.getElementById('roleInput').value = this.dataset.role;
-            });
-        });
     </script>
 
 </body>

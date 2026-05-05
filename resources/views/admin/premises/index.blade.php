@@ -44,6 +44,42 @@
             background: #154d1a;
         }
 
+        /* Vacancy Prompt Banner */
+        .vacancy-banner {
+            background: #E8F5E9;
+            border: 1px solid #4CAF50;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .vacancy-banner i {
+            color: #2E7D32;
+            font-size: 20px;
+        }
+
+        .btn-publish {
+            background: #1B5E20;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn-publish:hover {
+            background: #154d1a;
+        }
+
         /* Table Card */
         .premises-card {
             background: #fff;
@@ -73,6 +109,10 @@
             letter-spacing: 0.7px;
         }
 
+        .premises-table thead th:last-child {
+            text-align: center;
+        }
+
         .premises-table tbody tr {
             border-bottom: 1px solid #f5f5f5;
             transition: background 0.15s;
@@ -92,6 +132,10 @@
             vertical-align: middle;
         }
 
+        .premises-table tbody td:last-child {
+            text-align: center;
+        }
+
         /* Type Badge */
         .type-badge {
             background: #E3F2FD;
@@ -99,6 +143,16 @@
             border-radius: 20px;
             padding: 4px 12px;
             font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .quota-badge {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 11px;
             font-weight: 600;
             display: inline-block;
         }
@@ -142,6 +196,7 @@
             display: flex;
             gap: 6px;
             align-items: center;
+            justify-content: center;
         }
 
         .icon-btn {
@@ -233,6 +288,34 @@
             outline: none;
         }
 
+        /* Tenant Info Box */
+        .tenant-info-box {
+            background: #FFF8E1;
+            border: 1px solid #FFA726;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .tenant-info-box i {
+            color: #F57F17;
+        }
+
+        .warning-box {
+            background: #FFEBEE;
+            border: 1px solid #EF5350;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .warning-box i {
+            color: #C62828;
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px;
@@ -260,6 +343,13 @@
                 padding: 12px 12px;
             }
         }
+
+        /* Disabled select styling */
+        select.modal-select:disabled {
+            background-color: #f5f5f5;
+            color: #666;
+            cursor: not-allowed;
+        }
     </style>
 
     <div class="page-header">
@@ -277,6 +367,30 @@
     </div>
 
     @include('partials.flash')
+
+    {{-- Vacancy prompt banner (injected into success message) --}}
+    @if (session('success') && str_contains(session('success'), 'vacancy_prompt='))
+        @php
+            preg_match('/vacancy_prompt=(\d+)/', session('success'), $m);
+            $vpId = $m[1] ?? null;
+            $vpPremises = $vpId ? \App\Models\Premises::find($vpId) : null;
+        @endphp
+        @if ($vpPremises)
+            <div class="vacancy-banner">
+                <div>
+                    <i class="bi bi-megaphone-fill me-2"></i>
+                    <strong>{{ $vpPremises->premises_name }}</strong> is now available.
+                    Would you like to publish a vacancy announcement to all residents?
+                </div>
+                <form method="POST" action="{{ url('/admin/premises/' . $vpPremises->premises_id . '/publish-vacancy') }}">
+                    @csrf
+                    <button type="submit" class="btn-publish">
+                        <i class="bi bi-megaphone me-1"></i>Publish Vacancy Notice
+                    </button>
+                </form>
+            </div>
+        @endif
+    @endif
 
     <div class="premises-card">
         <table class="premises-table">
@@ -299,7 +413,8 @@
                             <div style="font-weight: 600;">{{ $p->premises_name }}</div>
                             @if ($p->premises_description)
                                 <div style="font-size: 12px;" class="text-muted">
-                                    {{ Str::limit($p->premises_description, 50) }}</div>
+                                    {{ Str::limit($p->premises_description, 45) }}
+                                </div>
                             @endif
                         </td>
                         <td>
@@ -310,7 +425,7 @@
                             {{ $p->location->location_name ?? '—' }}
                         </td>
                         <td class="rental-fee">RM {{ number_format($p->rental_fee, 2) }}</td>
-                        <td>
+                        <td class="td-status">
                             @php
                                 $statusClass = match ($p->premises_status) {
                                     'available' => 'available',
@@ -330,95 +445,242 @@
                                 {{ ucfirst($p->premises_status) }}
                             </span>
                         </td>
-                        <td>
+                        <td class="td-actions">
                             <div class="actions-cell">
-                                <button class="icon-btn edit" data-bs-toggle="modal"
-                                    data-bs-target="#editPremisesModal{{ $p->premises_id }}" title="Edit">
-                                    <i class="bi bi-pencil-square"></i>
-                                </button>
-                                <form method="POST" action="{{ route('admin.premises.destroy', $p->premises_id) }}"
-                                    class="d-inline"
-                                    onsubmit="return confirm('Delete this premises? This cannot be undone.')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="icon-btn del" title="Delete">
-                                        <i class="bi bi-trash3"></i>
+                                @if ($p->premises_status === 'occupied')
+                                    <button class="icon-btn edit" data-bs-toggle="modal"
+                                        data-bs-target="#editOccupiedModal{{ $p->premises_id }}"
+                                        title="Edit Occupied Premises">
+                                        <i class="bi bi-pencil-square"></i>
                                     </button>
-                                </form>
+                                @else
+                                    <button class="icon-btn edit" data-bs-toggle="modal"
+                                        data-bs-target="#editPremisesModal{{ $p->premises_id }}" title="Edit">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+
+                                    {{-- Delete button only shown for non-occupied premises --}}
+                                    <form method="POST" action="{{ route('admin.premises.destroy', $p->premises_id) }}"
+                                        class="d-inline"
+                                        onsubmit="return confirm('Delete this premises? This cannot be undone.')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="icon-btn del">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </td>
                     </tr>
 
-                    {{-- Edit Premises Modal --}}
-                    <div class="modal fade" id="editPremisesModal{{ $p->premises_id }}" tabindex="-1">
-                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                            <div class="modal-content">
-                                <form method="POST" action="{{ route('admin.premises.update', $p->premises_id) }}">
-                                    @csrf @method('PUT')
-                                    <div class="modal-header">
-                                        <h6 class="modal-title fw-bold">Edit Premises</h6>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="row g-3">
-                                            <div class="col-md-8">
-                                                <label class="modal-label">Premises Name</label>
-                                                <input type="text" name="premises_name" class="modal-input"
-                                                    value="{{ $p->premises_name }}" required>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="modal-label">Location</label>
-                                                <select name="location_id" class="modal-select" required>
-                                                    @foreach ($locations as $loc)
-                                                        <option value="{{ $loc->location_id }}"
-                                                            {{ $p->location_id == $loc->location_id ? 'selected' : '' }}>
-                                                            {{ $loc->location_name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="modal-label">Type</label>
-                                                <select name="premises_type" class="modal-select" required>
-                                                    @foreach ($types as $type)
-                                                        <option value="{{ $type }}"
-                                                            {{ $p->premises_type === $type ? 'selected' : '' }}>
-                                                            {{ ucwords(str_replace('_', ' ', $type)) }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="modal-label">Rental Fee (RM)</label>
-                                                <input type="number" name="rental_fee" step="0.01" min="0"
-                                                    class="modal-input" value="{{ $p->rental_fee }}" required>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="modal-label">Status</label>
-                                                <select name="premises_status" class="modal-select" required>
-                                                    @foreach (['available', 'occupied', 'unavailable'] as $s)
-                                                        <option value="{{ $s }}"
-                                                            {{ $p->premises_status === $s ? 'selected' : '' }}>
-                                                            {{ ucfirst($s) }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-12">
-                                                <label class="modal-label">Description</label>
-                                                <input type="text" name="premises_description" class="modal-input"
-                                                    value="{{ $p->premises_description }}">
+                    {{-- ── Edit Modal (non-occupied) ──────────────────── --}}
+                    @if ($p->premises_status !== 'occupied')
+                        <div class="modal fade" id="editPremisesModal{{ $p->premises_id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
+                                    <form method="POST" action="{{ route('admin.premises.update', $p->premises_id) }}">
+                                        @csrf @method('PUT')
+                                        <div class="modal-header">
+                                            <h6 class="modal-title fw-bold">Edit Premises</h6>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row g-3">
+                                                <div class="col-md-8">
+                                                    <label class="modal-label">Premises Name</label>
+                                                    <input type="text" name="premises_name" class="modal-input"
+                                                        value="{{ $p->premises_name }}" required>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="modal-label">Location</label>
+                                                    <select name="location_id" class="modal-select" disabled>
+                                                        @foreach ($locations as $loc)
+                                                            <option value="{{ $loc->location_id }}"
+                                                                {{ $p->location_id == $loc->location_id ? 'selected' : '' }}>
+                                                                {{ $loc->location_name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <input type="hidden" name="location_id" value="{{ $p->location_id }}">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="modal-label">Type</label>
+                                                    <select name="premises_type" class="modal-select" disabled>
+                                                        @foreach ($types as $type)
+                                                            <option value="{{ $type }}"
+                                                                {{ $p->premises_type === $type ? 'selected' : '' }}>
+                                                                {{ ucwords(str_replace('_', ' ', $type)) }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <input type="hidden" name="premises_type"
+                                                        value="{{ $p->premises_type }}">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="modal-label">Rental Fee (RM)</label>
+                                                    <input type="number" name="rental_fee" step="0.01" min="0"
+                                                        class="modal-input" value="{{ $p->rental_fee }}" required>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="modal-label">Status</label>
+                                                    <select name="premises_status" class="modal-select" required>
+                                                        @foreach (['available', 'unavailable'] as $s)
+                                                            <option value="{{ $s }}"
+                                                                {{ $p->premises_status === $s ? 'selected' : '' }}>
+                                                                {{ ucfirst($s) }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="modal-label">Description</label>
+                                                    <input type="text" name="premises_description" class="modal-input"
+                                                        value="{{ $p->premises_description }}">
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline-secondary"
-                                            data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                                    </div>
-                                </form>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-secondary"
+                                                data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
+
+                    {{-- ── Edit Modal (OCCUPIED — shows tenant, locks status) ── --}}
+                    @if ($p->premises_status === 'occupied')
+                        @php
+                            // Load active tenant for this premises
+                            $activeApp = \App\Models\Application::with(['resident', 'rentalAgreement'])
+                                ->where('premises_id', $p->premises_id)
+                                ->where('application_status', 'approved')
+                                ->whereHas('rentalAgreement', fn($q) => $q->where('agreement_status', 'active'))
+                                ->first();
+                        @endphp
+                        <div class="modal fade" id="editOccupiedModal{{ $p->premises_id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
+                                    <form method="POST" action="{{ route('admin.premises.update', $p->premises_id) }}">
+                                        @csrf @method('PUT')
+                                        <div class="modal-header">
+                                            <h6 class="modal-title fw-bold">
+                                                Edit Premises
+                                                <span class="status-badge occupied ms-2"
+                                                    style="font-size: 11px;">Occupied</span>
+                                            </h6>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+
+                                            {{-- Current Tenant Info --}}
+                                            @if ($activeApp)
+                                                <div class="tenant-info-box">
+                                                    <div class="d-flex gap-3 align-items-start">
+                                                        <i class="bi bi-person-fill mt-1" style="font-size: 18px;"></i>
+                                                        <div>
+                                                            <div class="fw-semibold" style="font-size: 13px;">Current
+                                                                Tenant</div>
+                                                            <div style="font-size: 13px;">
+                                                                {{ $activeApp->resident->full_name }}
+                                                                — IC: {{ $activeApp->resident->resident_ic_number }}
+                                                                — {{ $activeApp->resident->resident_phone }}
+                                                            </div>
+                                                            <div class="text-muted" style="font-size: 12px;">
+                                                                Agreement #{{ $activeApp->rentalAgreement->agreement_id }}
+                                                                — Active until
+                                                                {{ $activeApp->rentalAgreement->agreement_end_date->format('d M Y') }}
+                                                            </div>
+                                                            <a href="{{ route('admin.agreements.show', $activeApp->rentalAgreement->agreement_id) }}"
+                                                                class="text-warning fw-semibold text-decoration-none"
+                                                                style="font-size: 12px;">
+                                                                View Agreement <i class="bi bi-arrow-right ms-1"></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            {{-- Notice: status is locked --}}
+                                            <div class="warning-box">
+                                                <i class="bi bi-lock-fill"></i>
+                                                <div>
+                                                    <strong>Status is locked.</strong> This premises is currently
+                                                    occupied.
+                                                    To change the status, terminate the rental agreement via
+                                                    <a href="{{ route('admin.agreements.index') }}"
+                                                        class="fw-semibold">Rental Agreements</a>.
+                                                    Changes to name or rental fee will notify the current tenant.
+                                                </div>
+                                            </div>
+
+                                            <div class="row g-3">
+                                                <div class="col-md-8">
+                                                    <label class="modal-label">Premises Name</label>
+                                                    <input type="text" name="premises_name" class="modal-input"
+                                                        value="{{ $p->premises_name }}" required>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="modal-label">Location</label>
+                                                    <select name="location_id" class="modal-select" disabled>
+                                                        @foreach ($locations as $loc)
+                                                            <option value="{{ $loc->location_id }}"
+                                                                {{ $p->location_id == $loc->location_id ? 'selected' : '' }}>
+                                                                {{ $loc->location_name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <input type="hidden" name="location_id"
+                                                        value="{{ $p->location_id }}">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="modal-label">Type</label>
+                                                    <select name="premises_type" class="modal-select" disabled>
+                                                        @foreach ($types as $type)
+                                                            <option value="{{ $type }}"
+                                                                {{ $p->premises_type === $type ? 'selected' : '' }}>
+                                                                {{ ucwords(str_replace('_', ' ', $type)) }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <input type="hidden" name="premises_type"
+                                                        value="{{ $p->premises_type }}">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="modal-label">Rental Fee (RM)</label>
+                                                    <input type="number" name="rental_fee" step="0.01"
+                                                        min="0" class="modal-input" value="{{ $p->rental_fee }}"
+                                                        required>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="modal-label">Status</label>
+                                                    <input type="text" class="form-control" value="Occupied" disabled
+                                                        style="background: #f5f5f5;">
+                                                    <input type="hidden" name="premises_status" value="occupied">
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="modal-label">Description</label>
+                                                    <input type="text" name="premises_description" class="modal-input"
+                                                        value="{{ $p->premises_description }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-secondary"
+                                                data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary"
+                                                onclick="return confirm('Save changes? Any fee or name changes will notify the current tenant.')">
+                                                Save Changes
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                 @empty
                     <tr>
                         <td colspan="7" class="empty-state">
@@ -451,7 +713,7 @@
                             <div class="col-md-8">
                                 <label class="modal-label">Premises Name <span class="text-danger">*</span></label>
                                 <input type="text" name="premises_name" class="modal-input" required
-                                    placeholder="e.g. Lot 5 Tanah Rata Market">
+                                    placeholder="e.g. No. 6 Food Stall Jalan Besar">
                             </div>
                             <div class="col-md-4">
                                 <label class="modal-label">Location <span class="text-danger">*</span></label>
@@ -477,8 +739,8 @@
                                 <input type="number" name="rental_fee" step="0.01" min="0"
                                     class="modal-input" required placeholder="0.00">
                             </div>
-                            <div class="col-md-3">
-                                <label class="modal-label">Status <span class="text-danger">*</span></label>
+                            <div class="col-md-6">
+                                <label class="modal-label">Initial Status <span class="text-danger">*</span></label>
                                 <select name="premises_status" class="modal-select" required>
                                     <option value="available">Available</option>
                                     <option value="unavailable">Unavailable</option>

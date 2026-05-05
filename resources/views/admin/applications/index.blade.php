@@ -157,6 +157,24 @@
             border: 1px solid #4CAF50;
         }
 
+        .badge-pill.active {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #4CAF50;
+        }
+
+        .badge-pill.terminated {
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #EF5350;
+        }
+
+        .badge-pill.expired {
+            background: #F5F5F5;
+            color: #757575;
+            border: 1px solid #BDBDBD;
+        }
+
         .badge-pill.rejected {
             background: #FFEBEE;
             color: #C62828;
@@ -167,6 +185,19 @@
             background: #F5F5F5;
             color: #757575;
             border: 1px solid #BDBDBD;
+        }
+
+        /* Archived badge */
+        .badge-archived {
+            background: #F5F5F5;
+            color: #999;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-block;
+            margin-left: 6px;
         }
 
         .action-view {
@@ -216,7 +247,7 @@
     <div class="page-header">
         <div>
             <div class="page-title">All Applications</div>
-            <div class="page-sub">Review and manage resident rental applications.</div>
+            <div class="page-sub">Review and manage resident rental applications — <code>vw_application_details</code></div>
         </div>
     </div>
 
@@ -230,19 +261,33 @@
                     <label class="filter-label">Status</label>
                     <select name="status" class="filter-select">
                         <option value="">All Statuses</option>
-                        @foreach (['pending', 'approved', 'rejected', 'cancelled'] as $s)
-                            <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
-                                {{ ucfirst($s) }}
-                            </option>
-                        @endforeach
+                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved (Awaiting
+                            Payment)</option>
+                        <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active (Rented)
+                        </option>
+                        <option value="terminated" {{ request('status') === 'terminated' ? 'selected' : '' }}>Terminated
+                        </option>
+                        <option value="expired" {{ request('status') === 'expired' ? 'selected' : '' }}>Expired</option>
+                        <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                        <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled
+                        </option>
                     </select>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
+                    <label class="filter-label">Show Archived</label>
+                    <select name="show_archived" class="filter-select">
+                        <option value="">No (Active Only)</option>
+                        <option value="yes" {{ request('show_archived') === 'yes' ? 'selected' : '' }}>Yes (Include
+                            Archived)</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
                     <label class="filter-label">Search Resident</label>
                     <input type="text" name="search" class="filter-input" placeholder="Name, IC number, or email..."
                         value="{{ request('search') }}">
                 </div>
-                <div class="col-md-3 d-flex gap-2">
+                <div class="col-md-2 d-flex gap-2">
                     <button type="submit" class="btn-filter">Apply Filters</button>
                     <a href="{{ route('admin.applications.index') }}" class="btn-clear">Clear</a>
                 </div>
@@ -267,31 +312,70 @@
             <tbody>
                 @forelse($applications as $app)
                     @php
-                        $statusClass = match ($app->application_status) {
+                        // Calculate display status based on view data
+                        if ($app->deleted_at) {
+                            $displayStatus = 'archived';
+                        } elseif ($app->application_status === 'pending') {
+                            $displayStatus = 'pending';
+                        } elseif ($app->application_status === 'rejected') {
+                            $displayStatus = 'rejected';
+                        } elseif ($app->application_status === 'cancelled') {
+                            $displayStatus = 'cancelled';
+                        } elseif ($app->application_status === 'approved') {
+                            if ($app->agreement_id && $app->agreement_status === 'active') {
+                                $displayStatus = 'active';
+                            } elseif ($app->agreement_id && $app->agreement_status === 'terminated') {
+                                $displayStatus = 'terminated';
+                            } elseif ($app->agreement_id && $app->agreement_status === 'expired') {
+                                $displayStatus = 'expired';
+                            } else {
+                                $displayStatus = 'approved';
+                            }
+                        } else {
+                            $displayStatus = $app->application_status ?? 'unknown';
+                        }
+
+                        $statusClass = match ($displayStatus) {
                             'pending' => 'pending',
                             'approved' => 'approved',
+                            'active' => 'active',
+                            'terminated' => 'terminated',
+                            'expired' => 'expired',
                             'rejected' => 'rejected',
                             'cancelled' => 'cancelled',
+                            'archived' => 'cancelled',
                             default => 'pending',
                         };
                     @endphp
                     <tr>
-                        <td class="text-muted">#{{ $app->application_id }}</td>
-                        <td>
-                            <div style="font-weight: 600;">{{ $app->resident?->full_name ?? '—' }}</div>
-                            <div style="font-size: 11px;" class="text-muted">{{ $app->resident?->resident_email }}</div>
+                        <td class="text-muted">
+                            #{{ $app->application_id }}
+                            @if ($app->deleted_at)
+                                <span class="badge-archived">Archived</span>
+                            @endif
                         </td>
                         <td>
-                            <div style="font-size: 13px;">{{ $app->premises?->premises_name ?? '—' }}</div>
+                            <div style="font-weight: 600;">{{ $app->resident_full_name ?? '—' }}</div>
+                            <div style="font-size: 11px;" class="text-muted">{{ $app->resident_email ?? '—' }}</div>
+                            @if ($app->resident_deleted_at)
+                                <div style="font-size: 10px;" class="text-muted">
+                                    <i class="bi bi-person-x"></i> Account deactivated
+                                </div>
+                            @endif
+                        </td>
+                        <td>
+                            <div style="font-size: 13px;">{{ $app->premises_name ?? '—' }}</div>
                             <div style="font-size: 11px;" class="text-muted">
-                                <i class="bi bi-geo-alt"></i> {{ $app->premises?->location?->location_name ?? '—' }}
+                                <i class="bi bi-geo-alt"></i> {{ $app->location_name ?? '—' }}
                             </div>
                         </td>
                         <td style="font-size: 13px;">{{ Str::limit($app->intended_business_type, 35) }}</td>
-                        <td style="font-size: 12px;" class="text-muted">{{ $app->application_date->format('d M Y') }}</td>
+                        <td style="font-size: 12px;" class="text-muted">
+                            {{ \Carbon\Carbon::parse($app->application_date)->format('d M Y') }}
+                        </td>
                         <td>
                             <span class="badge-pill {{ $statusClass }}">
-                                {{ ucfirst($app->application_status) }}
+                                {{ ucfirst($displayStatus) }}
                             </span>
                         </td>
                         <td>

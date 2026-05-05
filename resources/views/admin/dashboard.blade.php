@@ -141,15 +141,16 @@
             color: #888;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 14px 20px;
+            padding: 14px 16px;
             border-bottom: 1px solid #f0f0f0;
             background: #fafafa;
         }
 
         .admin-table tbody td {
-            padding: 14px 20px;
+            padding: 14px 16px;
             font-size: 13px;
             border-bottom: 1px solid #f5f5f5;
+            vertical-align: middle;
         }
 
         .admin-table tbody tr:last-child td {
@@ -193,12 +194,41 @@
             border: 1px solid #BDBDBD;
         }
 
+        /* Small secondary badge */
+        .badge-sm {
+            font-size: 11px;
+            padding: 4px 12px;
+            margin-left: 6px;
+            vertical-align: middle;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .badge-sm.active {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #4CAF50;
+        }
+
+        .badge-sm.terminated {
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #EF5350;
+        }
+
+        .badge-sm.expired {
+            background: #F5F5F5;
+            color: #757575;
+            border: 1px solid #BDBDBD;
+        }
+
         .empty-state {
             text-align: center;
             padding: 48px;
             color: #aaa;
         }
 
+        /* Responsive */
         @media (max-width: 1024px) {
             .stats-row {
                 grid-template-columns: repeat(2, 1fr);
@@ -209,6 +239,11 @@
         @media (max-width: 768px) {
             .stats-row {
                 grid-template-columns: 1fr;
+            }
+
+            .admin-table thead th,
+            .admin-table tbody td {
+                padding: 10px 12px;
             }
         }
     </style>
@@ -287,45 +322,76 @@
                             <p class="mt-2 mb-0">No applications yet.</p>
                         </div>
                     @else
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Resident</th>
-                                    <th>Premises</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($recentApplications as $app)
-                                    @php
-                                        $statusClass = match ($app->application_status) {
-                                            'pending' => 'pending',
-                                            'approved' => 'approved',
-                                            'rejected' => 'rejected',
-                                            'cancelled' => 'cancelled',
-                                            default => 'pending',
-                                        };
-                                    @endphp
+                        <div style="overflow-x: auto;">
+                            <table class="admin-table">
+                                <thead>
                                     <tr>
-                                        <td class="text-muted">#{{ $app->application_id }}</td>
-                                        <td>
-                                            <div style="font-weight: 600;">{{ $app->resident?->full_name ?? '—' }}</div>
-                                            <div style="font-size: 11px;" class="text-muted">
-                                                {{ $app->resident?->resident_email }}</div>
-                                        </td>
-                                        <td class="text-muted">{{ $app->premises?->premises_name ?? '—' }}</td>
-                                        <td>
-                                            <span class="badge-pill {{ $statusClass }}">
-                                                {{ ucfirst($app->application_status) }}
-                                            </span>
-                                        </td>
-                                        <td class="text-muted">{{ $app->application_date->format('d M Y') }}</td>
+                                        <th style="width: 70px;">ID</th>
+                                        <th>Resident</th>
+                                        <th>Premises</th>
+                                        <th>Status</th>
+                                        <th style="width: 100px;">Date</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach ($recentApplications as $app)
+                                        @php
+                                            $statusClass = match ($app->application_status) {
+                                                'pending' => 'pending',
+                                                'approved' => 'approved',
+                                                'rejected' => 'rejected',
+                                                'cancelled' => 'cancelled',
+                                                default => 'pending',
+                                            };
+
+                                            // Check if approved application has a rental agreement
+                                            $hasAgreement =
+                                                $app->application_status === 'approved' && $app->rentalAgreement;
+                                            $agreementStatus = $hasAgreement
+                                                ? $app->rentalAgreement->agreement_status
+                                                : null;
+                                        @endphp
+                                        <tr>
+                                            <td class="text-muted fw-semibold">#{{ $app->application_id }}</td>
+                                            <td>
+                                                <div style="font-weight: 600;">{{ $app->resident?->full_name ?? '—' }}</div>
+                                                <div style="font-size: 11px; color: #aaa;">
+                                                    {{ $app->resident?->resident_email ?? '—' }}</div>
+                                            </td>
+                                            <td>
+                                                <div>{{ $app->premises?->premises_name ?? '—' }}</div>
+                                                <div style="font-size: 11px; color: #aaa;">
+                                                    <i class="bi bi-geo-alt"></i>
+                                                    {{ $app->premises?->location?->location_name ?? '—' }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex flex-wrap align-items-center gap-1">
+                                                    <span class="badge-pill {{ $statusClass }}">
+                                                        {{ ucfirst($app->application_status) }}
+                                                    </span>
+                                                    @if ($hasAgreement)
+                                                        @if ($agreementStatus === 'active')
+                                                            <span class="badge-sm active">
+                                                                 Active
+                                                            </span>
+                                                        @else
+                                                            <span class="badge-sm {{ $agreementStatus }}">
+                                                                {{ ucfirst($agreementStatus) }}
+                                                            </span>
+                                                        @endif
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="text-muted" style="white-space: nowrap;">
+                                                <i class="bi bi-calendar3 me-1"></i>
+                                                {{ $app->application_date->format('d M Y') }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     @endif
                 </div>
             </div>

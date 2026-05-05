@@ -18,10 +18,44 @@ class ApplicationController extends Controller
     {
         $resident = auth('resident')->user();
 
-        $query = Application::with(['premises.location'])->where('resident_id', $resident->resident_id);
+        $query = Application::with(['premises.location', 'rentalAgreement'])->where('resident_id', $resident->resident_id);
 
         if ($request->filled('status')) {
-            $query->where('application_status', $request->status);
+            $status = $request->status;
+
+            switch ($status) {
+                case 'active':
+                    // Approved applications with ACTIVE rental agreement
+                    $query->where('application_status', 'approved')->whereHas('rentalAgreement', fn($q) => $q->where('agreement_status', 'active'));
+                    break;
+
+                case 'terminated':
+                    // Approved applications with TERMINATED rental agreement
+                    $query->where('application_status', 'approved')->whereHas('rentalAgreement', fn($q) => $q->where('agreement_status', 'terminated'));
+                    break;
+
+                case 'expired':
+                    // Approved applications with EXPIRED rental agreement
+                    $query->where('application_status', 'approved')->whereHas('rentalAgreement', fn($q) => $q->where('agreement_status', 'expired'));
+                    break;
+
+                case 'approved':
+                    // Approved applications WITHOUT any rental agreement (awaiting payment)
+                    $query->where('application_status', 'approved')->whereDoesntHave('rentalAgreement');
+                    break;
+
+                case 'pending':
+                case 'rejected':
+                case 'cancelled':
+                    // Direct status match
+                    $query->where('application_status', $status);
+                    break;
+
+                default:
+                    // Fallback for any other value
+                    $query->where('application_status', $status);
+                    break;
+            }
         }
 
         $applications = $query->orderByDesc('application_date')->paginate(10);
@@ -47,14 +81,33 @@ class ApplicationController extends Controller
         // Check premises is still available
         $premises = Premises::where('premises_id', $request->premises_id)->where('premises_status', 'available')->firstOrFail();
 
-        // Check resident does not already have a pending/approved application for this premises
-        $existing = Application::where('resident_id', $resident->resident_id)
-            ->where('premises_id', $premises->premises_id)
-            ->whereIn('application_status', ['pending', 'approved'])
-            ->exists();
+        // Check if resident already has an ACTIVE rental agreement (ANY premises)
+        // MDCH policy: "Tidak mempunyai lebih daripada 1 lesen perniagaan dengan MDCH"
+        $hasActiveAgreement = Application::where('resident_id', $resident->resident_id)->where('application_status', 'approved')->whereHas('rentalAgreement', fn($q) => $q->where('agreement_status', 'active'))->exists();
 
-        if ($existing) {
-            return back()->with('error', 'You already have an active application for this premises.');
+        if ($hasActiveAgreement) {
+            return back()->with('error', 'You already have an active rental agreement for another premises. ' . 'MDCH policy allows only one active business license at a time. ' . 'You cannot submit a new application while you have an active agreement.');
+        }
+
+        // Check for PENDING application for THIS premises
+        $hasPendingForThisPremises = Application::where('resident_id', $resident->resident_id)->where('premises_id', $premises->premises_id)->where('application_status', 'pending')->exists();
+
+        if ($hasPendingForThisPremises) {
+            return back()->with('error', 'You already have a pending application for this premises. ' . 'Please wait for the MDCH committee to review your existing application. ' . 'Duplicate applications for the same premises are not allowed. ' . 'You can check the status of your application in "My Applications".');
+        }
+
+        // Check for APPROVED application with ACTIVE agreement for THIS premises
+        $hasActiveForThisPremises = Application::where('resident_id', $resident->resident_id)->where('premises_id', $premises->premises_id)->where('application_status', 'approved')->whereHas('rentalAgreement', fn($q) => $q->where('agreement_status', 'active'))->exists();
+
+        if ($hasActiveForThisPremises) {
+            return back()->with('error', 'You already have an active rental agreement for this premises. ' . 'You cannot apply again while you have an active agreement. ' . 'If your agreement has been terminated, you may apply again.');
+        }
+
+        // Check for APPROVED application WITHOUT active agreement (awaiting payment)
+        $hasApprovedWithoutPayment = Application::where('resident_id', $resident->resident_id)->where('premises_id', $premises->premises_id)->where('application_status', 'approved')->whereDoesntHave('rentalAgreement')->exists();
+
+        if ($hasApprovedWithoutPayment) {
+            return back()->with('error', 'You already have an approved application for this premises awaiting payment. ' . 'Please proceed to payment in "My Applications" to complete your rental agreement. ' . 'You cannot submit another application for the same premises.');
         }
 
         DB::beginTransaction();

@@ -252,7 +252,7 @@
             text-decoration: underline;
         }
 
-        /* Status Badges */
+        /* Status Badges - Updated for display_status */
         .badge-pill {
             display: inline-block;
             padding: 5px 14px;
@@ -262,23 +262,45 @@
         }
 
         .badge-pill.pending {
-            background: #FF9800;
-            color: #fff;
+            background: #FFF8E1;
+            color: #F57F17;
+            border: 1px solid #F9A825;
         }
 
         .badge-pill.approved {
-            background: #2E7D32;
-            color: #fff;
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #4CAF50;
+        }
+
+        .badge-pill.active {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #4CAF50;
         }
 
         .badge-pill.rejected {
-            background: #C62828;
-            color: #fff;
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #EF5350;
         }
 
         .badge-pill.cancelled {
-            background: #9E9E9E;
-            color: #fff;
+            background: #F5F5F5;
+            color: #757575;
+            border: 1px solid #BDBDBD;
+        }
+
+        .badge-pill.terminated {
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #EF5350;
+        }
+
+        .badge-pill.expired {
+            background: #F5F5F5;
+            color: #757575;
+            border: 1px solid #BDBDBD;
         }
 
         /* Empty State */
@@ -334,6 +356,14 @@
             <div class="welcome-title">Welcome, {{ auth('resident')->user()->resident_first_name }}!</div>
             <div class="welcome-sub">Manage your premises rental applications and track your status with MDCH.</div>
         </div>
+
+        @if (auth('resident')->user()->hasActiveAgreement())
+            <div class="alert alert-warning">
+                <i class="bi bi-info-circle me-2"></i>
+                You currently have an active rental agreement. MDCH policy allows only one active business license at a
+                time.
+            </div>
+        @endif
 
         {{-- Stat Cards with Icons --}}
         <div class="stats-row">
@@ -403,15 +433,6 @@
                     </thead>
                     <tbody>
                         @foreach ($recentApplications as $app)
-                            @php
-                                $statusClass = match ($app->application_status) {
-                                    'pending' => 'pending',
-                                    'approved' => 'approved',
-                                    'rejected' => 'rejected',
-                                    'cancelled' => 'cancelled',
-                                    default => 'pending',
-                                };
-                            @endphp
                             <tr>
                                 <td class="td-id">#{{ $app->application_id }}</td>
                                 <td class="td-premises">
@@ -425,8 +446,8 @@
                                     {{ \Carbon\Carbon::parse($app->application_date)->format('d M Y') }}
                                 </td>
                                 <td class="td-status">
-                                    <span class="badge-pill {{ $statusClass }}">
-                                        {{ ucfirst($app->application_status) }}
+                                    <span class="badge-pill {{ $app->display_status_badge_class }}">
+                                        {{ ucfirst($app->display_status) }}
                                     </span>
                                 </td>
                                 <td class="td-rental">

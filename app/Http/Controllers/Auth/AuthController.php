@@ -11,53 +11,43 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    // ============================================================
-    // Shared login page
-    // ============================================================
+    // Login page
     public function showLogin()
     {
         return view('auth.login');
     }
 
+    // Login with auto-detect guard (no role selector)
     public function login(Request $request)
     {
         $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
-            'role' => ['required', 'in:resident,admin'],
         ]);
 
-        if ($request->role === 'admin') {
-            $admin = Admin::where('admin_email', $request->email)->first();
-
-            if (!$admin || !Hash::check($request->password, $admin->admin_password)) {
-                return back()
-                    ->withErrors(['email' => 'Invalid admin credentials.'])
-                    ->withInput();
-            }
-
+        // 1. Check admins table first
+        $admin = Admin::where('admin_email', $request->email)->first();
+        if ($admin && Hash::check($request->password, $admin->admin_password)) {
             auth('admin')->login($admin);
             $request->session()->regenerate();
             return redirect()->route('admin.dashboard');
         }
 
-        // Resident login
+        // 2. Check residents table (excluding soft-deleted)
         $resident = Resident::where('resident_email', $request->email)->first();
-
-        if (!$resident || !Hash::check($request->password, $resident->resident_password)) {
-            return back()
-                ->withErrors(['email' => 'Invalid email or password.'])
-                ->withInput();
+        if ($resident && Hash::check($request->password, $resident->resident_password)) {
+            auth('resident')->login($resident);
+            $request->session()->regenerate();
+            return redirect()->route('resident.dashboard');
         }
 
-        auth('resident')->login($resident);
-        $request->session()->regenerate();
-        return redirect()->route('resident.dashboard');
+        // 3. Neither matched
+        return back()
+            ->withErrors(['email' => 'No account found with these credentials.'])
+            ->withInput($request->only('email'));       // keep the input field
     }
 
-    // ============================================================
     // Resident registration
-    // ============================================================
     public function showRegister()
     {
         return view('auth.register');
@@ -79,6 +69,7 @@ class AuthController extends Controller
             'mdch_license_holder' => $request->boolean('mdch_license_holder'),
             'business_experience' => $request->boolean('business_experience'),
             'business_type' => $request->business_type,
+            'created_at' => now(),
         ]);
 
         auth('resident')->login($resident);
@@ -87,9 +78,7 @@ class AuthController extends Controller
         return redirect()->route('resident.dashboard')->with('success', 'Account created successfully. Welcome to BPRMS!');
     }
 
-    // ============================================================
     // Logout (handles both guards)
-    // ============================================================
     public function logout(Request $request)
     {
         auth('admin')->logout();

@@ -18,7 +18,7 @@ class ResidentRegisterRequest extends FormRequest
             'resident_middle_name' => ['nullable', 'string', 'max:50'],
             'resident_last_name' => ['required', 'string', 'max:50'],
             'resident_ic_number' => ['required', 'string', 'size:12', 'regex:/^[0-9]+$/', 'unique:residents,resident_ic_number'],
-            'resident_phone' => ['required', 'string', 'min:10', 'max:12'],
+            'resident_phone' => ['required', 'string', 'min:10', 'max:11', 'regex:/^01[0-9]{8,9}$/'],
             'resident_address' => ['required', 'string', 'max:255'],
             'resident_email' => ['required', 'email', 'max:100', 'unique:residents,resident_email'],
             'residency_duration' => ['required', 'integer', 'min:0', 'max:255'],

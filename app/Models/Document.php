@@ -16,6 +16,8 @@ class Document extends Model
         'uploaded_at' => 'datetime',
     ];
 
+    // Relationships
+
     public function application()
     {
         return $this->belongsTo(Application::class, 'application_id', 'application_id');
@@ -29,6 +31,8 @@ class Document extends Model
             'applicant_photo' => 'Applicant Photo',
             'spouse_photo' => 'Spouse Photo',
             'supporting_document' => 'Supporting Document',
+
+            // Safety net
             default => ucfirst(str_replace('_', ' ', $this->document_type)),
         };
     }

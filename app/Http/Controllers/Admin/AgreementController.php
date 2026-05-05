@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\RentalAgreement;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class AgreementController extends Controller
@@ -28,16 +29,32 @@ class AgreementController extends Controller
     }
 
     // Admin terminates an active agreement
+    // Modified: adds vacancy_prompt to success message for publishing vacancy notice
     public function terminate($id)
     {
-        $agreement = RentalAgreement::where('agreement_id', $id)->where('agreement_status', 'active')->firstOrFail();
+        $agreement = RentalAgreement::with(['application.premises', 'application.resident'])
+            ->where('agreement_id', $id)
+            ->where('agreement_status', 'active')
+            ->firstOrFail();
 
-        // This fires trg_after_agreement_status_update → premises back to 'available'
+        $premisesId = $agreement->application->premises_id;
+        $premisesName = $agreement->application->premises->premises_name ?? 'the premises';
+        $residentId = $agreement->application->resident_id;
+
+        // Send notification to the resident BEFORE termination
+        NotificationService::agreementTerminated(
+            $residentId,
+            $premisesName,
+            $agreement->agreement_id,
+            null, // optional remarks
+        );
+
+        // Fires trg_after_agreement_status_update → premises back to 'available'
         $agreement->update([
             'agreement_status' => 'terminated',
             'updated_at' => now(),
         ]);
 
-        return back()->with('success', 'Agreement terminated. Premises is now available.');
+        return back()->with('success', "Agreement terminated. \"{$premisesName}\" is now available. " . "vacancy_prompt={$premisesId}");
     }
 }

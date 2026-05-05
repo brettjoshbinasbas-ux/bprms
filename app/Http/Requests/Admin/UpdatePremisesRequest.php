@@ -4,7 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StorePremisesRequest extends FormRequest
+class UpdatePremisesRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,20 +14,13 @@ class StorePremisesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'location_id' => ['required', 'exists:locations,location_id'],
             'premises_name' => ['required', 'string', 'max:100'],
-            'premises_type' => ['required', 'in:business_premises,market_table,market_stall,food_stall,handicraft,workshop,various'],
             'premises_description' => ['nullable', 'string', 'max:255'],
+            'unit_count' => ['required', 'integer', 'min:1', 'max:255'],
             'rental_fee' => ['required', 'numeric', 'min:0'],
             'premises_status' => ['required', 'in:available,occupied,unavailable'],
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'premises_type.in' => 'Please select a valid premises type.',
-            'premises_status.in' => 'Please select a valid premises status.',
+            // location_id, premises_type, applicant_quota are NOT validated here
+            // because they come from hidden inputs and shouldn't change
         ];
     }
 }

@@ -122,6 +122,21 @@
             outline: none;
         }
 
+        .filter-select {
+            padding: 8px 14px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 13px;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .filter-select:focus {
+            border-color: #1B5E20;
+            outline: none;
+        }
+
         .btn-search {
             background: #1B5E20;
             color: #fff;
@@ -241,6 +256,41 @@
             text-decoration: none;
         }
 
+        .actions-cell {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            font-size: 16px;
+        }
+
+        .icon-btn.deactivate {
+            color: #C62828;
+        }
+
+        .icon-btn.deactivate:hover {
+            background: #FFEBEE;
+        }
+
+        .icon-btn.restore {
+            color: #1565C0;
+        }
+
+        .icon-btn.restore:hover {
+            background: #E3F2FD;
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px;
@@ -259,6 +309,18 @@
             border-top: 1px solid #f0f0f0;
             display: flex;
             justify-content: center;
+        }
+
+        .deactivated-badge {
+            background: #F5F5F5;
+            color: #757575;
+            border: 1px solid #BDBDBD;
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-block;
+            margin-left: 8px;
         }
 
         @media (max-width: 1024px) {
@@ -339,12 +401,19 @@
         </div>
     </div>
 
-    {{-- Search Filter --}}
+    {{-- Search Filter & Status Filter --}}
     <div class="filter-card">
         <form method="GET" action="{{ route('admin.residents.index') }}"
             class="d-flex gap-2 align-items-center flex-wrap">
             <input type="text" name="search" class="filter-input" placeholder="Search by name, IC, or email..."
                 value="{{ request('search') }}">
+
+            <select name="status" class="filter-select" style="width: auto;">
+                <option value="">All Residents</option>
+                <option value="deactivated" {{ request('status') === 'deactivated' ? 'selected' : '' }}>Deactivated Only
+                </option>
+            </select>
+
             <button type="submit" class="btn-search">Search</button>
             <a href="{{ route('admin.residents.index') }}" class="btn-clear">Clear</a>
         </form>
@@ -361,6 +430,7 @@
                     <th>Phone</th>
                     <th>Email</th>
                     <th>Applications</th>
+                    <th>Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -372,6 +442,9 @@
                             <div style="font-weight: 600;">{{ $r->full_name }}</div>
                             <div style="font-size: 11px;" class="text-muted">
                                 <span class="marital-badge">{{ ucfirst($r->marital_status) }}</span>
+                                @if ($r->trashed())
+                                    <span class="deactivated-badge">Deactivated</span>
+                                @endif
                             </div>
                         </td>
                         <td style="font-family: monospace; font-size: 13px;">{{ $r->resident_ic_number }}</td>
@@ -384,14 +457,40 @@
                             </span>
                         </td>
                         <td>
-                            <a href="{{ route('admin.residents.show', $r->resident_id) }}" class="action-view">
-                                <i class="bi bi-eye"></i> View
-                            </a>
+                            @if ($r->trashed())
+                                <span class="badge badge-expired" style="font-size: 11px;">Deactivated</span>
+                            @else
+                                <span class="badge badge-approved" style="font-size: 11px;">Active</span>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <a href="{{ route('admin.residents.show', $r->resident_id) }}" class="action-view"
+                                    title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                                @if ($r->trashed())
+                                    <form method="POST" action="{{ route('admin.residents.restore', $r->resident_id) }}"
+                                        class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="icon-btn restore" title="Restore Account"
+                                            onclick="return confirm('Restore this resident account? All applications will be restored.')">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
+                                    </form>
+                                @else
+                                    <button class="icon-btn deactivate" data-bs-toggle="modal"
+                                        data-bs-target="#deactivateModal{{ $r->resident_id }}" title="Deactivate Account">
+                                        <i class="bi bi-person-x"></i>
+                                    </button>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="empty-state">
+                        <td colspan="8" class="empty-state">
                             <i class="bi bi-people"></i>
                             <p>No residents found.</p>
                         </td>
@@ -405,4 +504,54 @@
             </div>
         @endif
     </div>
+
+    {{-- Deactivate Modals --}}
+    @foreach ($residents as $r)
+        @if (!$r->trashed())
+            <div class="modal fade" id="deactivateModal{{ $r->resident_id }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h6 class="modal-title fw-bold">Deactivate Resident Account</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to deactivate <strong>{{ $r->full_name }}</strong>?</p>
+                            <p class="text-muted" style="font-size: 13px;">
+                                This will:
+                            </p>
+                            <ul class="text-muted" style="font-size: 13px;">
+                                <li>Prevent the resident from logging in</li>
+                                <li>Archive all their applications (they will be hidden from normal views)</li>
+                                <li>Maintain all data for audit purposes</li>
+                            </ul>
+                            @if ($r->hasActiveAgreement())
+                                <div class="alert alert-danger mt-3" style="font-size: 13px;">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    This resident has an active rental agreement. Please terminate the agreement first.
+                                </div>
+                            @endif
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary"
+                                data-bs-dismiss="modal">Cancel</button>
+                            @if (!$r->hasActiveAgreement())
+                                <form method="POST" action="{{ route('admin.residents.deactivate', $r->resident_id) }}"
+                                    class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="bi bi-person-x me-1"></i>Deactivate Account
+                                    </button>
+                                </form>
+                            @else
+                                <button type="button" class="btn btn-secondary" disabled>Cannot Deactivate (Active
+                                    Agreement)</button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endforeach
+
 @endsection

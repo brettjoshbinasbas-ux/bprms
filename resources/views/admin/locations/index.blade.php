@@ -44,6 +44,63 @@
             background: #154d1a;
         }
 
+        /* Warning Banner for Force Delete */
+        .warning-banner {
+            background: #FFF8E1;
+            border: 1px solid #FFA726;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .warning-banner i {
+            color: #F57F17;
+            font-size: 20px;
+        }
+
+        .warning-banner .warning-text {
+            flex: 1;
+        }
+
+        .btn-force-delete {
+            background: #C62828;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn-force-delete:hover {
+            background: #b71c1c;
+        }
+
+        .btn-cancel-warning {
+            background: #f5f5f5;
+            color: #555;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+
+        .btn-cancel-warning:hover {
+            background: #eee;
+        }
+
         /* Table Card */
         .locations-card {
             background: #fff;
@@ -232,6 +289,36 @@
     </div>
 
     @include('partials.flash')
+
+    {{-- Force Delete Warning Banner --}}
+    @if (session('warning') && str_contains(session('warning'), 'location_force_delete_id='))
+        @php
+            preg_match('/location_force_delete_id=(\d+)/', session('warning'), $m);
+            $fdId = $m[1] ?? null;
+            // Strip the token from the display message
+            $warnMsg = preg_replace('/\s*location_force_delete_id=\d+/', '', session('warning'));
+        @endphp
+        <div class="warning-banner">
+            <div class="warning-text">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Warning:</strong> {{ $warnMsg }}
+            </div>
+            @if ($fdId)
+                <div class="d-flex gap-2">
+                    <form method="POST" action="{{ route('admin.locations.destroy', $fdId) }}?confirm=1">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn-force-delete"
+                            onclick="return confirm('This will permanently delete this location and ALL its premises. This action cannot be undone. Are you sure?')">
+                            <i class="bi bi-trash me-1"></i>Force Delete Location & All Premises
+                        </button>
+                    </form>
+                    <a href="{{ route('admin.locations.index') }}" class="btn-cancel-warning">
+                        Cancel
+                    </a>
+                </div>
+            @endif
+        </div>
+    @endif
 
     <div class="locations-card">
         <table class="locations-table">

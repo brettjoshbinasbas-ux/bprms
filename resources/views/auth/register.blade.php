@@ -240,7 +240,7 @@
 
         @include('partials.flash')
 
-        <form method="POST" action="{{ route('register.post') }}">
+        <form method="POST" action="{{ route('register.post') }}" id="registerForm">
             @csrf
 
             <!-- Row 1: First Name | Middle Name (side by side) -->
@@ -300,7 +300,12 @@
                     <label class="form-label">Phone Number <span class="text-danger">*</span></label>
                     <input type="tel" name="resident_phone"
                         class="form-control @error('resident_phone') is-invalid @enderror"
-                        value="{{ old('resident_phone') }}" placeholder="e.g. 0123456789" required>
+                        value="{{ old('resident_phone') }}" placeholder="e.g. 0123456789 or 01112345678" minlength="10"
+                        maxlength="11" pattern="^01[0-9]{8,9}$"
+                        title="Please enter a valid Malaysian mobile number starting with 01 (e.g., 0123456789 or 01112345678)"
+                        required>
+                    <div class="form-text" style="font-size: 11px; color: #999;">Malaysian mobile number (10-11 digits,
+                        starts with 01)</div>
                     @error('resident_phone')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -436,6 +441,13 @@
                 icon.classList.replace('bi-eye-slash', 'bi-eye');
             }
         }
+
+        // Optional: Live validation for phone number
+        document.querySelector('input[name="resident_phone"]').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            e.target.value = value;
+        });
     </script>
 
 </body>

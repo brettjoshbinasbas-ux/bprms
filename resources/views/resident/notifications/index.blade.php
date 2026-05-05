@@ -58,6 +58,16 @@
             border-radius: 20px;
         }
 
+        .badge-terminated {
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #EF5350;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+
         /* Action Link */
         .action-link {
             text-decoration: none;
@@ -140,8 +150,6 @@
         @endif
     </div>
 
-    @include('partials.flash')
-
     @if ($notifications->isEmpty())
         <div class="empty-state">
             <i class="bi bi-bell-slash"></i>
@@ -183,6 +191,12 @@
                                         <i class="bi bi-megaphone me-1"></i>Announcement
                                     </span>
                                 @endif
+                                @if ($n->type === 'agreement_terminated')
+                                    <span class="badge-terminated">
+                                        <i class="bi bi-exclamation-triangle-fill me-1" style="font-size: 9px;"></i>
+                                        Terminated
+                                    </span>
+                                @endif
                             </div>
                             <p class="mb-2" style="font-size: 14px; color: #555; line-height: 1.5;">{{ $n->message }}
                             </p>
@@ -202,6 +216,11 @@
                                         <a href="{{ route('resident.premises.index') }}" class="action-link"
                                             style="color: {{ $n->color }};">
                                             Browse Premises <i class="bi bi-arrow-right ms-1"></i>
+                                        </a>
+                                    @elseif($n->type === 'agreement_terminated')
+                                        <a href="{{ route('resident.applications.show', $n->related_id) }}"
+                                            class="action-link" style="color: {{ $n->color }};">
+                                            View Related Application <i class="bi bi-arrow-right ms-1"></i>
                                         </a>
                                     @endif
                                 @endif

@@ -3,14 +3,11 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
-        // ============================================================
         // TRIGGER 1: trg_after_agreement_created
         // After rental_agreement insert → mark premises as 'occupied'
-        // ============================================================
         DB::unprepared("
             CREATE TRIGGER trg_after_agreement_created
             AFTER INSERT ON rental_agreements
@@ -23,10 +20,8 @@ return new class extends Migration
             END
         ");
 
-        // ============================================================
         // TRIGGER 2: trg_after_agreement_status_update
         // After agreement becomes terminated/expired → mark premises 'available'
-        // ============================================================
         DB::unprepared("
             CREATE TRIGGER trg_after_agreement_status_update
             AFTER UPDATE ON rental_agreements
@@ -42,10 +37,8 @@ return new class extends Migration
             END
         ");
 
-        // ============================================================
         // TRIGGER 3: trg_after_payment_completed
         // After payment status → 'completed', auto-insert rental_agreement
-        // ============================================================
         DB::unprepared("
             CREATE TRIGGER trg_after_payment_completed
             AFTER UPDATE ON payments
@@ -75,9 +68,8 @@ return new class extends Migration
             END
         ");
 
-        // ============================================================
-        // VIEW 1: vw_application_details
-        // ============================================================
+        // VIEW 1: vw_application_details (ENHANCED)
+        // Includes deleted_at and rental agreement info for derived status
         DB::unprepared("
             CREATE VIEW vw_application_details AS
             SELECT
@@ -88,6 +80,9 @@ return new class extends Migration
                 a.financial_position,
                 a.reviewed_at,
                 a.remarks,
+                a.deleted_at,
+                a.created_at,
+                a.updated_at,
                 r.resident_id,
                 CONCAT(r.resident_first_name, ' ',
                        COALESCE(CONCAT(r.resident_middle_name, ' '), ''),
@@ -100,25 +95,30 @@ return new class extends Migration
                 r.mdch_license_holder,
                 r.business_experience,
                 r.business_type,
+                r.deleted_at AS resident_deleted_at,
                 p.premises_id,
                 p.premises_name,
                 p.premises_type,
                 p.rental_fee,
                 p.premises_status,
                 l.location_name,
+                ad.admin_id AS reviewer_id,
                 CONCAT(ad.admin_first_name, ' ',
                        COALESCE(CONCAT(ad.admin_middle_name, ' '), ''),
-                       ad.admin_last_name) AS reviewed_by_name
+                       ad.admin_last_name) AS reviewed_by_name,
+                ra.agreement_id,
+                ra.agreement_status,
+                ra.agreement_start_date,
+                ra.agreement_end_date
             FROM applications a
-            JOIN residents r   ON a.resident_id = r.resident_id
-            JOIN premises p    ON a.premises_id = p.premises_id
-            JOIN locations l   ON p.location_id = l.location_id
+            JOIN residents r ON a.resident_id = r.resident_id
+            JOIN premises p ON a.premises_id = p.premises_id
+            JOIN locations l ON p.location_id = l.location_id
             LEFT JOIN admins ad ON a.reviewed_by = ad.admin_id
+            LEFT JOIN rental_agreements ra ON a.application_id = ra.application_id
         ");
 
-        // ============================================================
         // VIEW 2: vw_active_agreements
-        // ============================================================
         DB::unprepared("
             CREATE VIEW vw_active_agreements AS
             SELECT
@@ -146,17 +146,15 @@ return new class extends Migration
                 a.application_id,
                 a.intended_business_type
             FROM rental_agreements ra
-            JOIN applications a  ON ra.application_id = a.application_id
-            JOIN residents r     ON a.resident_id = r.resident_id
-            JOIN premises p      ON a.premises_id = p.premises_id
-            JOIN locations l     ON p.location_id = l.location_id
-            JOIN payments py     ON ra.payment_id = py.payment_id
+            JOIN applications a ON ra.application_id = a.application_id
+            JOIN residents r ON a.resident_id = r.resident_id
+            JOIN premises p ON a.premises_id = p.premises_id
+            JOIN locations l ON p.location_id = l.location_id
+            JOIN payments py ON ra.payment_id = py.payment_id
             WHERE ra.agreement_status = 'active'
         ");
 
-        // ============================================================
         // VIEW 3: vw_revenue_summary
-        // ============================================================
         DB::unprepared("
             CREATE VIEW vw_revenue_summary AS
             SELECT
@@ -167,8 +165,8 @@ return new class extends Migration
                 AVG(py.amount)         AS average_payment
             FROM payments py
             JOIN applications a ON py.application_id = a.application_id
-            JOIN premises p     ON a.premises_id = p.premises_id
-            JOIN locations l    ON p.location_id = l.location_id
+            JOIN premises p ON a.premises_id = p.premises_id
+            JOIN locations l ON p.location_id = l.location_id
             WHERE py.payment_status = 'completed'
             GROUP BY l.location_name, p.premises_type
             ORDER BY total_revenue DESC

@@ -3,8 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         DB::unprepared("
@@ -25,11 +24,14 @@ return new class extends Migration
                 business_type            VARCHAR(100)    DEFAULT NULL,
                 created_at               DATETIME        NOT NULL DEFAULT NOW(),
                 updated_at               DATETIME        DEFAULT NULL ON UPDATE NOW(),
+                deleted_at               DATETIME        DEFAULT NULL,
                 CONSTRAINT pk_residents               PRIMARY KEY (resident_id),
                 CONSTRAINT uq_residents_ic            UNIQUE (resident_ic_number),
                 CONSTRAINT uq_residents_email         UNIQUE (resident_email)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ");
+
+        DB::unprepared('CREATE INDEX idx_residents_deleted ON residents(deleted_at);');
     }
 
     public function down(): void

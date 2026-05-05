@@ -16,4 +16,26 @@ class Location extends Model
     {
         return $this->hasMany(Premises::class, 'location_id', 'location_id');
     }
+
+    // In app/Models/Location.php
+    public function hasPremisesWithHistory(): bool
+    {
+        foreach ($this->premises as $premise) {
+            if ($premise->hasApplicationHistory()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function getPremisesWithHistoryCount(): int
+    {
+        $count = 0;
+        foreach ($this->premises as $premise) {
+            if ($premise->hasApplicationHistory()) {
+                $count++;
+            }
+        }
+        return $count;
+    }
 }

@@ -114,6 +114,42 @@
             display: inline-block;
         }
 
+        /* Vacancy Prompt Banner */
+        .vacancy-banner {
+            background: #E8F5E9;
+            border: 1px solid #4CAF50;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .vacancy-banner i {
+            color: #2E7D32;
+            font-size: 20px;
+        }
+
+        .btn-publish {
+            background: #1B5E20;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn-publish:hover {
+            background: #154d1a;
+        }
+
         /* Terminate Button */
         .terminate-card {
             background: #fff;
@@ -194,6 +230,31 @@
 
         @include('partials.flash')
 
+        {{-- Vacancy Prompt After Termination --}}
+        @if (session('success') && str_contains(session('success'), 'vacancy_prompt='))
+            @php
+                preg_match('/vacancy_prompt=(\d+)/', session('success'), $m);
+                $vpId = $m[1] ?? null;
+                $vpPremises = $vpId ? \App\Models\Premises::with('location')->find($vpId) : null;
+            @endphp
+            @if ($vpPremises)
+                <div class="vacancy-banner">
+                    <div>
+                        <i class="bi bi-megaphone-fill me-2"></i>
+                        <strong>{{ $vpPremises->premises_name }}</strong> has been released and is now available.
+                        Publish a vacancy notice to notify all residents?
+                    </div>
+                    <form method="POST"
+                        action="{{ url('/admin/premises/' . $vpPremises->premises_id . '/publish-vacancy') }}">
+                        @csrf
+                        <button type="submit" class="btn-publish">
+                            <i class="bi bi-megaphone me-1"></i>Publish Vacancy Notice
+                        </button>
+                    </form>
+                </div>
+            @endif
+        @endif
+
         <div class="row g-4">
             {{-- LEFT COLUMN (col-md-8) --}}
             <div class="col-md-8">
@@ -208,12 +269,14 @@
                             <div class="col-sm-4">
                                 <div class="text-muted" style="font-size:12px;">Start Date</div>
                                 <div style="font-size:14px;font-weight:600;">
-                                    {{ $agreement->agreement_start_date->format('d M Y') }}</div>
+                                    {{ $agreement->agreement_start_date->format('d M Y') }}
+                                </div>
                             </div>
                             <div class="col-sm-4">
                                 <div class="text-muted" style="font-size:12px;">End Date</div>
                                 <div style="font-size:14px;font-weight:600;">
-                                    {{ $agreement->agreement_end_date->format('d M Y') }}</div>
+                                    {{ $agreement->agreement_end_date->format('d M Y') }}
+                                </div>
                             </div>
                             <div class="col-sm-4">
                                 <div class="text-muted" style="font-size:12px;">Duration</div>
@@ -221,12 +284,15 @@
                             </div>
                             <div class="col-sm-4">
                                 <div class="text-muted" style="font-size:12px;">Amount Paid</div>
-                                <div style="font-size:14px;font-weight:600;" class="text-success">RM
-                                    {{ number_format($agreement->payment?->amount, 2) }}</div>
+                                <div style="font-size:14px;font-weight:600;" class="text-success">
+                                    RM {{ number_format($agreement->payment?->amount, 2) }}
+                                </div>
                             </div>
                             <div class="col-sm-4">
                                 <div class="text-muted" style="font-size:12px;">Payment Date</div>
-                                <div style="font-size:14px;">{{ $agreement->payment?->payment_date->format('d M Y') }}</div>
+                                <div style="font-size:14px;">
+                                    {{ $agreement->payment?->payment_date->format('d M Y') }}
+                                </div>
                             </div>
                             <div class="col-sm-4">
                                 <div class="text-muted" style="font-size:12px;">Payment Method</div>
@@ -250,26 +316,32 @@
                             <div class="col-sm-6">
                                 <div class="text-muted" style="font-size:12px;">Full Name</div>
                                 <div style="font-size:14px;font-weight:600;">
-                                    {{ $agreement->application?->resident?->full_name }}</div>
+                                    {{ $agreement->application?->resident?->full_name }}
+                                </div>
                             </div>
                             <div class="col-sm-6">
                                 <div class="text-muted" style="font-size:12px;">IC Number</div>
-                                <div style="font-size:14px;">{{ $agreement->application?->resident?->resident_ic_number }}
+                                <div style="font-size:14px;">
+                                    {{ $agreement->application?->resident?->resident_ic_number }}
                                 </div>
                             </div>
                             <div class="col-sm-6">
                                 <div class="text-muted" style="font-size:12px;">Phone</div>
-                                <div style="font-size:14px;">{{ $agreement->application?->resident?->resident_phone }}
+                                <div style="font-size:14px;">
+                                    {{ $agreement->application?->resident?->resident_phone }}
                                 </div>
                             </div>
                             <div class="col-sm-6">
                                 <div class="text-muted" style="font-size:12px;">Email</div>
-                                <div style="font-size:14px;">{{ $agreement->application?->resident?->resident_email }}
+                                <div style="font-size:14px;">
+                                    {{ $agreement->application?->resident?->resident_email }}
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="text-muted" style="font-size:12px;">Business Type</div>
-                                <div style="font-size:14px;">{{ $agreement->application?->intended_business_type }}</div>
+                                <div style="font-size:14px;">
+                                    {{ $agreement->application?->intended_business_type }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -288,7 +360,8 @@
                         <div class="mb-3">
                             <div class="text-muted" style="font-size:12px;">Name</div>
                             <div class="fw-semibold" style="font-size:14px;">
-                                {{ $agreement->application?->premises?->premises_name }}</div>
+                                {{ $agreement->application?->premises?->premises_name }}
+                            </div>
                         </div>
                         <div class="mb-3">
                             <div class="text-muted" style="font-size:12px;">Type</div>

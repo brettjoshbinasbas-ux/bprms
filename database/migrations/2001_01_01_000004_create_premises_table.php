@@ -3,8 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         DB::unprepared("
@@ -14,6 +13,7 @@ return new class extends Migration
                 premises_name        VARCHAR(100)    NOT NULL,
                 premises_type        ENUM('business_premises','market_table','market_stall','food_stall','handicraft','workshop','various') NOT NULL,
                 premises_description VARCHAR(255)    DEFAULT NULL,
+                applicant_quota      VARCHAR(20)     NOT NULL DEFAULT 'open',
                 rental_fee           DECIMAL(8,2)    NOT NULL,
                 premises_status      ENUM('available','occupied','unavailable') NOT NULL DEFAULT 'available',
                 created_at           DATETIME        NOT NULL DEFAULT NOW(),

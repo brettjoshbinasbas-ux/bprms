@@ -593,7 +593,7 @@
                             <li><i class="bi bi-envelope-paper"></i> Ensure all documents are clear and readable</li>
                             <li><i class="bi bi-check-circle"></i> Double-check your business type and financial position
                             </li>
-                            <li><i class="bi bi-clock-history"></i> Applications are reviewed within 7-14 working days</li>
+                            {{-- <li><i class="bi bi-clock-history"></i> Applications are reviewed within 7-14 working days</li> --}}
                             <li><i class="bi bi-credit-card"></i> If approved, payment is required to secure the premises
                             </li>
                         </ul>
