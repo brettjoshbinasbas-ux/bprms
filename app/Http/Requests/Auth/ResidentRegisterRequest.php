@@ -18,8 +18,12 @@ class ResidentRegisterRequest extends FormRequest
             'resident_middle_name' => ['nullable', 'string', 'max:50'],
             'resident_last_name' => ['required', 'string', 'max:50'],
             'resident_ic_number' => ['required', 'string', 'size:12', 'regex:/^[0-9]+$/', 'unique:residents,resident_ic_number'],
-            'resident_phone' => ['required', 'string', 'min:10', 'max:11', 'regex:/^01[0-9]{8,9}$/'],
-            'resident_address' => ['required', 'string', 'max:255'],
+            'resident_phone' => ['required', 'string', 'regex:/^01[0-9]{8,9}$/'],
+            'resident_address_line1' => ['required', 'string', 'max:100'],
+            'resident_address_line2' => ['nullable', 'string', 'max:100'],
+            'resident_postcode' => ['required', 'string', 'size:5', 'regex:/^[0-9]{5}$/'],
+            'resident_city' => ['required', 'string', 'max:50'],
+            'resident_state' => ['required', 'string', 'max:50'],
             'resident_email' => ['required', 'email', 'max:100', 'unique:residents,resident_email'],
             'residency_duration' => ['required', 'integer', 'min:0', 'max:255'],
             'marital_status' => ['required', 'in:single,married,widowed,divorced'],
@@ -35,6 +39,9 @@ class ResidentRegisterRequest extends FormRequest
         return [
             'resident_ic_number.size' => 'IC number must be exactly 12 digits.',
             'resident_ic_number.regex' => 'IC number must contain digits only (no hyphens).',
+            'resident_phone.regex' => 'Please enter a valid Malaysian mobile number starting with 01.',
+            'resident_postcode.size' => 'Postcode must be exactly 5 digits.',
+            'resident_postcode.regex' => 'Postcode must contain digits only.',
         ];
     }
 }

@@ -10,23 +10,32 @@ class Notification extends Model
     protected $primaryKey = 'notification_id';
     public $timestamps = false;
 
-    protected $fillable = ['resident_id', 'type', 'title', 'message', 'is_read', 'related_id', 'related_type', 'created_at'];
+    protected $fillable = ['resident_id', 'type', 'title', 'message', 'is_read', 'related_application_id', 'related_premises_id', 'created_at'];
 
     protected $casts = [
         'is_read' => 'boolean',
         'created_at' => 'datetime',
     ];
 
-    // Relationships
+    // ── Relationships ──────────────────────────────────────────────
 
     public function resident()
     {
         return $this->belongsTo(Resident::class, 'resident_id', 'resident_id');
     }
 
-    // Accessors
+    public function relatedApplication()
+    {
+        return $this->belongsTo(Application::class, 'related_application_id', 'application_id');
+    }
 
-    // Icon per notification type
+    public function relatedPremises()
+    {
+        return $this->belongsTo(Premises::class, 'related_premises_id', 'premises_id');
+    }
+
+    // ── Accessors ──────────────────────────────────────────────────
+
     public function getIconAttribute(): string
     {
         return match ($this->type) {
@@ -41,7 +50,6 @@ class Notification extends Model
         };
     }
 
-    // Color per type
     public function getColorAttribute(): string
     {
         return match ($this->type) {
@@ -56,7 +64,6 @@ class Notification extends Model
         };
     }
 
-    // Background color per type
     public function getBgAttribute(): string
     {
         return match ($this->type) {
@@ -71,10 +78,8 @@ class Notification extends Model
         };
     }
 
-    // Scopes
+    // ── Scopes ─────────────────────────────────────────────────────
 
-    // Notifications visible to a specific resident:
-    // personal (their resident_id) OR broadcast (resident_id IS NULL)
     public function scopeForResident($query, int $residentId)
     {
         return $query->where(function ($q) use ($residentId) {

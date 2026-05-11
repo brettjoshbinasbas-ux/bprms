@@ -204,12 +204,17 @@ class DatabaseSeeder extends Seeder
         // ============================================================
         // RESIDENTS
         // ============================================================
+        // resident1 — Ahmad Hassan
         $resident1 = Resident::create([
             'resident_first_name' => 'Ahmad',
             'resident_last_name' => 'Hassan',
             'resident_ic_number' => '900101145678',
             'resident_phone' => '0123456789',
-            'resident_address' => '12 Jalan Besar, Tanah Rata, Cameron Highlands',
+            'resident_address_line1' => 'No. 12, Jalan Besar',
+            'resident_address_line2' => null,
+            'resident_postcode' => '39000',
+            'resident_city' => 'Tanah Rata',
+            'resident_state' => 'Pahang',
             'resident_email' => 'ahmad@example.com',
             'resident_password' => Hash::make('password'),
             'residency_duration' => 10,
@@ -220,12 +225,17 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
         ]);
 
+        // resident2 — Siti Rahimah
         $resident2 = Resident::create([
             'resident_first_name' => 'Siti',
             'resident_last_name' => 'Rahimah',
             'resident_ic_number' => '850612025432',
             'resident_phone' => '0134567890',
-            'resident_address' => '5 Lorong Damai, Brinchang, Cameron Highlands',
+            'resident_address_line1' => 'No. 5, Lorong Damai',
+            'resident_address_line2' => null,
+            'resident_postcode' => '39100',
+            'resident_city' => 'Brinchang',
+            'resident_state' => 'Pahang',
             'resident_email' => 'siti@example.com',
             'resident_password' => Hash::make('password'),
             'residency_duration' => 7,
@@ -236,12 +246,17 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
         ]);
 
+        // resident3 — Rajan Munusamy
         $resident3 = Resident::create([
             'resident_first_name' => 'Rajan',
             'resident_last_name' => 'Munusamy',
             'resident_ic_number' => '780320088765',
             'resident_phone' => '0198765432',
-            'resident_address' => '3 Jalan Ringlet, Ringlet, Cameron Highlands',
+            'resident_address_line1' => 'No. 3, Jalan Ringlet',
+            'resident_address_line2' => null,
+            'resident_postcode' => '39200',
+            'resident_city' => 'Ringlet',
+            'resident_state' => 'Pahang',
             'resident_email' => 'rajan@example.com',
             'resident_password' => Hash::make('password'),
             'residency_duration' => 15,
@@ -252,8 +267,8 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
         ]);
 
-        // Extra dummy residents
-        $dummyResidents = [['Lim', 'Wei Kiat', '920305101234', '0111234567', 'married'], ['Norida', 'Zakaria', '940820045678', '0129876543', 'single'], ['Kumar', 'Selvam', '881215087654', '0167654321', 'widowed'], ['Fatimah', 'Ismail', '760901025432', '0133219876', 'divorced'], ['David', 'Tan', '990715141234', '0125432167', 'single']];
+        // Dummy residents loop — replace resident_address with atomic fields
+        $dummyResidents = [['Lim', 'Wei Kiat', '920305101234', '0111234567', 'married', 'Lot 10', '39000', 'Tanah Rata', 'Pahang'], ['Norida', 'Zakaria', '940820045678', '0129876543', 'single', 'Lot 11', '39100', 'Brinchang', 'Pahang'], ['Kumar', 'Selvam', '881215087654', '0167654321', 'widowed', 'Lot 12', '39200', 'Ringlet', 'Pahang'], ['Fatimah', 'Ismail', '760901025432', '0133219876', 'divorced', 'Lot 13', '39010', 'Kea Farm', 'Pahang'], ['David', 'Tan', '990715141234', '0125432167', 'single', 'Lot 14', '39300', 'Kampung Raja', 'Pahang']];
 
         foreach ($dummyResidents as $i => $d) {
             Resident::create([
@@ -261,7 +276,11 @@ class DatabaseSeeder extends Seeder
                 'resident_last_name' => $d[1],
                 'resident_ic_number' => $d[2],
                 'resident_phone' => $d[3],
-                'resident_address' => 'Lot ' . ($i + 10) . ', Cameron Highlands',
+                'resident_address_line1' => $d[5] . ', Jalan Cameron Highlands',
+                'resident_address_line2' => null,
+                'resident_postcode' => $d[6],
+                'resident_city' => $d[7],
+                'resident_state' => $d[8],
                 'resident_email' => strtolower(str_replace(' ', '', $d[1])) . $i . '@example.com',
                 'resident_password' => Hash::make('password'),
                 'residency_duration' => rand(1, 20),

@@ -340,7 +340,7 @@
                         <div class="profile-row">
                             <div class="profile-label">Address</div>
                             <div class="profile-value">
-                                <i class="bi bi-geo-alt"></i> {{ $resident->resident_address }}
+                                <i class="bi bi-geo-alt"></i> {{ $resident->full_address }}
                             </div>
                         </div>
                         <div class="profile-row">

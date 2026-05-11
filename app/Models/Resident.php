@@ -13,7 +13,7 @@ class Resident extends Authenticatable
     protected $primaryKey = 'resident_id';
     public $timestamps = false;
 
-    protected $fillable = ['resident_first_name', 'resident_middle_name', 'resident_last_name', 'resident_ic_number', 'resident_phone', 'resident_address', 'resident_email', 'resident_password', 'residency_duration', 'marital_status', 'mdch_license_holder', 'business_experience', 'business_type'];
+    protected $fillable = ['resident_first_name', 'resident_middle_name', 'resident_last_name', 'resident_ic_number', 'resident_phone', 'resident_address_line1', 'resident_address_line2', 'resident_postcode', 'resident_city', 'resident_state', 'resident_email', 'resident_password', 'residency_duration', 'marital_status', 'mdch_license_holder', 'business_experience', 'business_type'];
 
     protected $hidden = ['resident_password'];
 
@@ -23,39 +23,46 @@ class Resident extends Authenticatable
         'deleted_at' => 'datetime',
     ];
 
-    // ── Boot method to handle cascading soft deletes ──
-    protected static function boot()
+    // ── Boot: cascade soft deletes to applications ─────────────────
+    protected static function boot(): void
     {
         parent::boot();
 
         static::deleting(function ($resident) {
-            // When resident is soft deleted, also soft delete all their applications
             if ($resident->isForceDeleting()) {
-                // Force delete - also force delete applications
                 $resident->applications()->forceDelete();
             } else {
-                // Soft delete - also soft delete applications
                 $resident->applications()->delete();
             }
         });
 
         static::restoring(function ($resident) {
-            // When resident is restored, also restore all their applications
             $resident->applications()->withTrashed()->restore();
         });
     }
 
-    // Required by Laravel auth
+    // ── Auth ───────────────────────────────────────────────────────
     public function getAuthPassword(): string
     {
         return $this->resident_password;
     }
 
-    // Accessor: full name
+    // ── Accessors ──────────────────────────────────────────────────
+
     public function getFullNameAttribute(): string
     {
         return trim($this->resident_first_name . ' ' . ($this->resident_middle_name ? $this->resident_middle_name . ' ' : '') . $this->resident_last_name);
     }
+
+    // Full formatted address — used in views wherever the complete
+    // address needs to be shown as a single readable string
+    public function getFullAddressAttribute(): string
+    {
+        $parts = array_filter([$this->resident_address_line1, $this->resident_address_line2, $this->resident_postcode . ' ' . $this->resident_city, $this->resident_state]);
+        return implode(', ', $parts);
+    }
+
+    // ── Relationships ──────────────────────────────────────────────
 
     public function applications()
     {
@@ -67,7 +74,8 @@ class Resident extends Authenticatable
         return $this->hasMany(Notification::class, 'resident_id', 'resident_id');
     }
 
-    // Check if this resident currently has an active rental agreement.
+    // ── Business logic ─────────────────────────────────────────────
+
     public function hasActiveAgreement(): bool
     {
         return Application::where('resident_id', $this->resident_id)->where('application_status', 'approved')->whereHas('rentalAgreement', fn($q) => $q->where('agreement_status', 'active'))->exists();

@@ -44,7 +44,7 @@ class AuthController extends Controller
         // 3. Neither matched
         return back()
             ->withErrors(['email' => 'No account found with these credentials.'])
-            ->withInput($request->only('email'));       // keep the input field
+            ->withInput($request->only('email')); // keep the input field
     }
 
     // Resident registration
@@ -61,7 +61,11 @@ class AuthController extends Controller
             'resident_last_name' => $request->resident_last_name,
             'resident_ic_number' => $request->resident_ic_number,
             'resident_phone' => $request->resident_phone,
-            'resident_address' => $request->resident_address,
+            'resident_address_line1' => $request->resident_address_line1,
+            'resident_address_line2' => $request->resident_address_line2,
+            'resident_postcode' => $request->resident_postcode,
+            'resident_city' => $request->resident_city,
+            'resident_state' => $request->resident_state,
             'resident_email' => $request->resident_email,
             'resident_password' => Hash::make($request->resident_password),
             'residency_duration' => $request->residency_duration,

@@ -91,11 +91,6 @@
             color: #bbb;
         }
 
-        textarea.form-control {
-            resize: vertical;
-            min-height: 80px;
-        }
-
         select.form-control {
             appearance: none;
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -123,7 +118,6 @@
             cursor: pointer;
             color: #999;
             font-size: 16px;
-            line-height: 1;
         }
 
         .password-toggle:hover {
@@ -195,6 +189,29 @@
             min-width: calc(50% - 10px);
         }
 
+        .col-third {
+            flex: 1;
+            min-width: calc(33% - 14px);
+        }
+
+        .form-hint {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #1B5E20;
+            margin-bottom: 16px;
+            margin-top: 4px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e8f5e9;
+        }
+
         .radio-group {
             display: flex;
             gap: 20px;
@@ -221,7 +238,9 @@
         }
 
         @media (max-width: 560px) {
-            .col-half {
+
+            .col-half,
+            .col-third {
                 min-width: 100%;
             }
         }
@@ -231,7 +250,6 @@
 <body>
 
     <div class="auth-card">
-        <!-- Brand Header — ALL CENTERED -->
         <div class="text-center">
             <div class="brand-avatar">B.P.R.M.S.</div>
             <div class="brand-title">Business Premises Rental Management System</div>
@@ -240,10 +258,12 @@
 
         @include('partials.flash')
 
-        <form method="POST" action="{{ route('register.post') }}" id="registerForm">
+        <form method="POST" action="{{ route('register.post') }}">
             @csrf
 
-            <!-- Row 1: First Name | Middle Name (side by side) -->
+            {{-- ── Personal Information ── --}}
+            <div class="section-label">Personal Information</div>
+
             <div class="row">
                 <div class="col-half">
                     <label class="form-label">First Name <span class="text-danger">*</span></label>
@@ -261,7 +281,6 @@
                 </div>
             </div>
 
-            <!-- Row 2: Last Name (full width) -->
             <div class="form-group">
                 <label class="form-label">Last Name <span class="text-danger">*</span></label>
                 <input type="text" name="resident_last_name"
@@ -272,20 +291,17 @@
                 @enderror
             </div>
 
-            <!-- Row 3: IC Number (full width) -->
             <div class="form-group">
                 <label class="form-label">IC / Identification Number <span class="text-danger">*</span></label>
                 <input type="text" name="resident_ic_number"
                     class="form-control @error('resident_ic_number') is-invalid @enderror"
-                    value="{{ old('resident_ic_number') }}" placeholder="e.g. 901231145678 (12 digits, no hyphens)"
-                    maxlength="12" required>
-                <div class="form-text" style="font-size: 11px; color: #999;">12 digits, no hyphens</div>
+                    value="{{ old('resident_ic_number') }}" placeholder="e.g. 901231145678" maxlength="12" required>
+                <div class="form-hint">12 digits, no hyphens</div>
                 @error('resident_ic_number')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
-            <!-- Row 4: Email | Phone (side by side) -->
             <div class="row">
                 <div class="col-half">
                     <label class="form-label">Email Address <span class="text-danger">*</span></label>
@@ -300,33 +316,90 @@
                     <label class="form-label">Phone Number <span class="text-danger">*</span></label>
                     <input type="tel" name="resident_phone"
                         class="form-control @error('resident_phone') is-invalid @enderror"
-                        value="{{ old('resident_phone') }}" placeholder="e.g. 0123456789 or 01112345678" minlength="10"
-                        maxlength="11" pattern="^01[0-9]{8,9}$"
-                        title="Please enter a valid Malaysian mobile number starting with 01 (e.g., 0123456789 or 01112345678)"
-                        required>
-                    <div class="form-text" style="font-size: 11px; color: #999;">Malaysian mobile number (10-11 digits,
-                        starts with 01)</div>
+                        value="{{ old('resident_phone') }}" placeholder="e.g. 0123456789" maxlength="11"
+                        pattern="^01[0-9]{8,9}$" required>
+                    <div class="form-hint">Malaysian mobile number (starts with 01)</div>
                     @error('resident_phone')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
 
-            <!-- Row 5: Residential Address (full width) -->
+            {{-- ── Residential Address ── --}}
+            <div class="section-label" style="margin-top: 8px;">Residential Address</div>
+
             <div class="form-group">
-                <label class="form-label">Residential Address <span class="text-danger">*</span></label>
-                <textarea name="resident_address" class="form-control @error('resident_address') is-invalid @enderror" rows="3"
-                    required>{{ old('resident_address') }}</textarea>
-                @error('resident_address')
+                <label class="form-label">
+                    Address Line 1 <span class="text-danger">*</span>
+                    <span class="text-muted">(House/unit number and street name)</span>
+                </label>
+                <input type="text" name="resident_address_line1"
+                    class="form-control @error('resident_address_line1') is-invalid @enderror"
+                    value="{{ old('resident_address_line1') }}" placeholder="e.g. No. 12, Jalan Besar" required>
+                @error('resident_address_line1')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
-            <!-- Row 6: Residency Duration | Marital Status (side by side) -->
+            <div class="form-group">
+                <label class="form-label">
+                    Address Line 2 <span class="text-muted">(Optional — Taman, estate, or area name)</span>
+                </label>
+                <input type="text" name="resident_address_line2"
+                    class="form-control @error('resident_address_line2') is-invalid @enderror"
+                    value="{{ old('resident_address_line2') }}" placeholder="e.g. Taman Sri Damai">
+                @error('resident_address_line2')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="row">
+                <div class="col-third">
+                    <label class="form-label">Postcode <span class="text-danger">*</span></label>
+                    <input type="text" name="resident_postcode"
+                        class="form-control @error('resident_postcode') is-invalid @enderror"
+                        value="{{ old('resident_postcode') }}" placeholder="e.g. 39000" maxlength="5"
+                        pattern="[0-9]{5}" required>
+                    <div class="form-hint">5-digit Malaysian postcode</div>
+                    @error('resident_postcode')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-third">
+                    <label class="form-label">City / Town <span class="text-danger">*</span></label>
+                    <input type="text" name="resident_city"
+                        class="form-control @error('resident_city') is-invalid @enderror"
+                        value="{{ old('resident_city') }}" placeholder="e.g. Tanah Rata" required>
+                    @error('resident_city')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-third">
+                    <label class="form-label">State <span class="text-danger">*</span></label>
+                    <select name="resident_state" class="form-control @error('resident_state') is-invalid @enderror"
+                        required>
+                        <option value="">— Select State —</option>
+                        @foreach (['Johor', 'Kedah', 'Kelantan', 'Melaka', 'Negeri Sembilan', 'Pahang', 'Perak', 'Perlis', 'Pulau Pinang', 'Sabah', 'Sarawak', 'Selangor', 'Terengganu', 'Wilayah Persekutuan Kuala Lumpur', 'Wilayah Persekutuan Labuan', 'Wilayah Persekutuan Putrajaya'] as $state)
+                            <option value="{{ $state }}"
+                                {{ old('resident_state') === $state ? 'selected' : '' }}>
+                                {{ $state }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('resident_state')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            {{-- ── Background Information ── --}}
+            <div class="section-label" style="margin-top: 8px;">Background Information</div>
+
             <div class="row">
                 <div class="col-half">
-                    <label class="form-label">Years Residing in Cameron Highlands <span
-                            class="text-danger">*</span></label>
+                    <label class="form-label">
+                        Years Residing in Cameron Highlands <span class="text-danger">*</span>
+                    </label>
                     <input type="number" name="residency_duration"
                         class="form-control @error('residency_duration') is-invalid @enderror"
                         value="{{ old('residency_duration', 0) }}" min="0" max="255" required>
@@ -339,14 +412,12 @@
                     <select name="marital_status" class="form-control @error('marital_status') is-invalid @enderror"
                         required>
                         <option value="">— Select —</option>
-                        <option value="single" {{ old('marital_status') == 'single' ? 'selected' : '' }}>Single
-                        </option>
-                        <option value="married" {{ old('marital_status') == 'married' ? 'selected' : '' }}>Married
-                        </option>
-                        <option value="widowed" {{ old('marital_status') == 'widowed' ? 'selected' : '' }}>Widowed
-                        </option>
-                        <option value="divorced" {{ old('marital_status') == 'divorced' ? 'selected' : '' }}>Divorced
-                        </option>
+                        @foreach (['single' => 'Single', 'married' => 'Married', 'widowed' => 'Widowed', 'divorced' => 'Divorced'] as $val => $label)
+                            <option value="{{ $val }}"
+                                {{ old('marital_status') === $val ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
                     </select>
                     @error('marital_status')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -354,7 +425,6 @@
                 </div>
             </div>
 
-            <!-- Row 7: MDCH License Holder | Business Experience (side by side) -->
             <div class="row">
                 <div class="col-half">
                     <label class="form-label">MDCH License Holder?</label>
@@ -388,9 +458,10 @@
                 </div>
             </div>
 
-            <!-- Row 8: Business Type (full width - conditional) -->
             <div class="form-group">
-                <label class="form-label">Business Type <span class="text-muted">(if applicable)</span></label>
+                <label class="form-label">
+                    Business Type <span class="text-muted">(if applicable)</span>
+                </label>
                 <input type="text" name="business_type"
                     class="form-control @error('business_type') is-invalid @enderror"
                     value="{{ old('business_type') }}" placeholder="e.g. Food & Beverage, Retail, Handicraft">
@@ -399,13 +470,15 @@
                 @enderror
             </div>
 
-            <!-- Row 9: Password | Confirm Password (side by side) -->
+            {{-- ── Account Security ── --}}
+            <div class="section-label" style="margin-top: 8px;">Account Security</div>
+
             <div class="row">
                 <div class="col-half">
                     <label class="form-label">Password <span class="text-danger">*</span></label>
                     <div class="password-wrapper">
-                        <input type="password" name="resident_password" id="passwordInput" class="form-control"
-                            required>
+                        <input type="password" name="resident_password" id="passwordInput"
+                            class="form-control @error('resident_password') is-invalid @enderror" required>
                         <button type="button" class="password-toggle" onclick="togglePassword()">
                             <i class="bi bi-eye" id="eyeIcon"></i>
                         </button>
@@ -420,10 +493,11 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-create">Create Account</button>
+            <button type="submit" class="btn-create">
+                <i class="bi bi-person-plus me-2"></i>Create Account
+            </button>
         </form>
 
-        {{-- Centered sign-in link --}}
         <p class="signin-link text-center">
             Already have an account? <a href="{{ route('login') }}">Sign In</a>
         </p>
@@ -442,11 +516,15 @@
             }
         }
 
-        // Optional: Live validation for phone number
+        // Digits-only enforcement for phone and postcode
         document.querySelector('input[name="resident_phone"]').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.slice(0, 11);
-            e.target.value = value;
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 11);
+        });
+        document.querySelector('input[name="resident_postcode"]').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 5);
+        });
+        document.querySelector('input[name="resident_ic_number"]').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 12);
         });
     </script>
 

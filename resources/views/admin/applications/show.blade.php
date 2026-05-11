@@ -332,7 +332,8 @@
                             @endif
                             <div class="col-12">
                                 <div class="text-muted" style="font-size:12px;">Address</div>
-                                <div style="font-size:14px;">{{ $application->resident?->resident_address }}</div>
+                                <div style="font-size:14px;">{{ $application->resident?->full_address }}
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -205,22 +205,26 @@
                                     <i class="bi bi-clock me-1"></i>{{ $n->created_at->diffForHumans() }}
                                 </span>
 
-                                {{-- Link to related record --}}
-                                @if ($n->related_id)
-                                    @if (in_array($n->type, ['application_approved', 'application_rejected', 'application_cancelled']))
-                                        <a href="{{ route('resident.applications.show', $n->related_id) }}"
+                                {{-- Link to related record using proper FK columns --}}
+                                @if ($n->related_application_id)
+                                    @if (in_array($n->type, [
+                                            'application_approved',
+                                            'application_rejected',
+                                            'application_cancelled',
+                                            'agreement_terminated',
+                                        ]))
+                                        <a href="{{ route('resident.applications.show', $n->related_application_id) }}"
                                             class="action-link" style="color: {{ $n->color }};">
                                             View Application <i class="bi bi-arrow-right ms-1"></i>
                                         </a>
-                                    @elseif($n->type === 'vacancy_announcement')
+                                    @endif
+                                @endif
+
+                                @if ($n->related_premises_id)
+                                    @if (in_array($n->type, ['vacancy_announcement', 'vacancy_updated', 'premises_updated']))
                                         <a href="{{ route('resident.premises.index') }}" class="action-link"
                                             style="color: {{ $n->color }};">
                                             Browse Premises <i class="bi bi-arrow-right ms-1"></i>
-                                        </a>
-                                    @elseif($n->type === 'agreement_terminated')
-                                        <a href="{{ route('resident.applications.show', $n->related_id) }}"
-                                            class="action-link" style="color: {{ $n->color }};">
-                                            View Related Application <i class="bi bi-arrow-right ms-1"></i>
                                         </a>
                                     @endif
                                 @endif
