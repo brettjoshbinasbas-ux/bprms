@@ -332,14 +332,14 @@
                 class="sidebar-link {{ request()->routeIs('admin.reports.revenue') ? 'active' : '' }}">
                 <i class="bi bi-cash-stack"></i> <span>Revenue Summary</span>
             </a>
-            <a href="{{ route('admin.reports.applications') }}"
+            {{-- <a href="{{ route('admin.reports.applications') }}"
                 class="sidebar-link {{ request()->routeIs('admin.reports.applications') ? 'active' : '' }}">
                 <i class="bi bi-bar-chart"></i> <span>Application Stats</span>
-            </a>
-            <a href="{{ route('admin.reports.occupancy') }}"
+            </a> --}}
+            {{-- <a href="{{ route('admin.reports.occupancy') }}"
                 class="sidebar-link {{ request()->routeIs('admin.reports.occupancy') ? 'active' : '' }}">
                 <i class="bi bi-buildings"></i> <span>Occupancy</span>
-            </a>
+            </a> --}}
 
             <div class="nav-section">Users</div>
             <a href="{{ route('admin.residents.index') }}"
